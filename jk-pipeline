@@ -1,0 +1,28 @@
+pipeline {
+    agent any
+
+        stage('Build') {
+            steps {
+                // Example: Maven build
+                sh 'mvn clean package'
+            }
+        }
+        
+        stage('Test') {
+            steps {
+                // Run tests (adjust according to your testing framework)
+                sh 'mvn test'
+            }
+        }
+        
+    }
+    
+    post {
+        success {
+            echo 'Pipeline succeeded! Deployment complete.'
+        }
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
