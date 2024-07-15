@@ -1,6 +1,7 @@
 pipeline {
     agent any
 
+    stages {
         stage('Build') {
             steps {
                 // Example: Maven build
@@ -14,7 +15,6 @@ pipeline {
                 sh 'mvn test'
             }
         }
-        
     }
     
     post {
