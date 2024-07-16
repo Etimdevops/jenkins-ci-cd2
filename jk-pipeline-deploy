@@ -1,31 +1,47 @@
 pipeline {
     agent any
     
+    tools {
+        // Define the Git tool installation
+        git 'Git'
+        // Define the Maven tool installation
+        maven 'Maven'
+    }
+    
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+        
         stage('Build') {
             steps {
                 sh '/opt/maven/bin/mvn clean package'
             }
         }
+        
         stage('Test') {
             steps {
                 sh '/opt/maven/bin/mvn test'
             }
         }
+        
         stage('Deploy') {
             steps {
-                // Define deployment steps here 
-                sh "sudo rm -rf ~/apache*/webapp/*.war"
-                sh "sudo mv target/*.war ~/apache*/webapps/"
-                sh "sudo systemctl daemon-reload"
-                sh "sudo ~/apache-tomcat-7.0.94/bin/shutdown.sh && sudo ~/apache-tomcat-7.0.94/bin/startup.sh"
+                // Remove existing war files
+                sh 'sudo rm -rf /var/lib/jenkins/apache*/webapp/*.war'
+                // Deploy the new war file
+                sh 'sudo mv /var/lib/jenkins/workspace/pipeline_job/target/*.war /var/lib/jenkins/apache*/webapp/'
+                // Restart Tomcat or your application server
+                sh 'sudo systemctl restart tomcat.service'
             }
         }
     }
     
     post {
         always {
-            // Send email notification on completion
+            // Email notification on build completion
             emailext subject: "Pipeline ${currentBuild.result}: ${env.JOB_NAME}",
                      body: "Pipeline ${currentBuild.result}: ${env.JOB_NAME} (${env.BUILD_URL})",
                      to: "recipient@example.com",
