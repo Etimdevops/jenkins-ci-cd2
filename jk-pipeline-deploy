@@ -28,8 +28,7 @@ pipeline {
                 
 
                 // Deploy the WAR file
-                sh "cp target/WebAppCal-0.0.6.war /home/ec2-user/apache-tomcat-7.0.94/webapps/WebAppCal.war
-"
+                sh 'cp target/WebAppCal-0.0.6.war /home/ec2-user/apache-tomcat-7.0.94/webapps/WebAppCal.war'
 
                 // Start Tomcat
                 sh "${env.CATALINA_HOME}/bin/startup.sh"
