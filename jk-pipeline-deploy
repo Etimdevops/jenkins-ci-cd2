@@ -29,8 +29,6 @@ pipeline {
 
     post {
         always {
-            // Clean up: Stop Tomcat if started during deployment
-            sh "${CATALINA_HOME}/bin/shutdown.sh || true"
+            // Send email notification on completion
         }
     }
-}
