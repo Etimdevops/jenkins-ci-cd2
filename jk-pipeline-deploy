@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         JAVA_HOME = '/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre'  // Replace with your Java installation path
-        CATALINA_HOME = '/home/ec2-user/apache-tomcat-7.0.94/bin'  // Replace with your Tomcat installation path
+        CATALINA_HOME = '/home/ec2-user/apache-tomcat-7.0.94'  // Replace with your Tomcat installation path
     }
 
     stages {
