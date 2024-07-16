@@ -23,8 +23,7 @@ pipeline {
         
         stage('Deploy to Tomcat') {
             steps {
-                // Stop Tomcat (if necessary)
-                sh "/home/ec2-user/apache-tomcat-7.0.94/bin/shutdown.sh"
+                
 
                 // Remove previous deployment (if necessary)
                 sh "rm -rf ${env.CATALINA_HOME}/webapps/WebAppCal"
