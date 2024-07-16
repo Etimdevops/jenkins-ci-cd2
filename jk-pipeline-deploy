@@ -22,16 +22,16 @@ pipeline {
         stage('Deploy') {
             steps {
                 // Stop Tomcat (if it's running)
-                sh "${CATALINA_HOME}/bin/shutdown.sh || true"
+                // sh "${CATALINA_HOME}/bin/shutdown.sh || true"
 
                 // Remove old application files
                 // sh "rm -rf ${CATALINA_HOME}/webapps/ROOT*"
 
                 // Copy new WAR file to Tomcat webapps directory
-                sh "cp target/*.war ${CATALINA_HOME}/webapps/WebAppCal.war"
+                sh "sudo cp target/*.war ${CATALINA_HOME}/webapps/WebAppCal.war"
 
                 // Start Tomcat
-                sh "${CATALINA_HOME}/bin/startup.sh"
+                // sh "${CATALINA_HOME}/bin/startup.sh"
             }
         }
     }
