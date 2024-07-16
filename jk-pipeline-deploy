@@ -1,52 +1,39 @@
 pipeline {
     agent any
-    
-    tools {
-        // Define the Git tool installation
-        git 'Git'
-        // Define the Maven tool installation
-        maven 'Maven'
-    }
-    
+
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-        
         stage('Build') {
             steps {
-                sh '/opt/maven/bin/mvn clean package'
+                // Example: Maven build
+                sh '/opt/maven/bin/mvn package'
             }
         }
         
         stage('Test') {
             steps {
+                // Run tests (adjust according to your testing framework)
                 sh '/opt/maven/bin/mvn test'
             }
         }
         
         stage('Deploy') {
             steps {
-                // Remove existing war files
-                sh 'sudo rm -rf /var/lib/jenkins/apache*/webapp/*.war'
-                // Deploy the new war file
-                sh 'sudo mv /var/lib/jenkins/workspace/pipeline_job/target/*.war /var/lib/jenkins/apache*/webapp/'
-                // Restart Tomcat or your application server
-                sh 'sudo systemctl restart tomcat.service'
+                // Example: Deploying artifacts (adjust based on your deployment method)
+                sh 'sudo rm -rf ~/apache-tomcat-7.0.94/webapp*.war'
+                sh 'sudo mv target/*.war ~/apache-tomcat-7.0.94/webapps/'
+                sh 'sudo systemctl daemon-reload' 
+                sh 'sudo ~/apache-tomcat-7.0.94/bin/shutdown.sh && sudo ~/apache-tomcat-7.0.94/bin/startup.sh'
+                // Additional deployment steps can be added as needed
             }
         }
     }
     
     post {
-        always {
-            // Email notification on build completion
-            emailext subject: "Pipeline ${currentBuild.result}: ${env.JOB_NAME}",
-                     body: "Pipeline ${currentBuild.result}: ${env.JOB_NAME} (${env.BUILD_URL})",
-                     to: "recipient@example.com",
-                     replyTo: "noreply@example.com",
-                     mimeType: 'text/html'
+        success {
+            echo 'Pipeline succeeded! Deployment complete.'
+        }
+        failure {
+            echo 'Pipeline failed.'
         }
     }
 }
