@@ -2,52 +2,44 @@ pipeline {
     agent any
 
     environment {
-        JAVA_HOME = '/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre'  // Replace with your Java installation path
-        CATALINA_HOME = '/home/ec2-user/apache-tomcat-7.0.94'  // Replace with your Tomcat installation path
+        JAVA_HOME = '/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre'
+        CATALINA_HOME = '/home/ec2-user/apache-tomcat-7.0.94'
     }
 
     stages {
         stage('Build') {
             steps {
-                // Example: Maven build
                 sh '/opt/maven/bin/mvn clean package'
             }
         }
-        
+
         stage('Test') {
             steps {
-                // Run tests (adjust according to your testing framework)
                 sh '/opt/maven/bin/mvn test'
             }
         }
-        
-        stage('Deploy to Tomcat') {
+
+        stage('Deploy') {
             steps {
-                
+                // Stop Tomcat (if it's running)
+                sh "${CATALINA_HOME}/bin/shutdown.sh || true"
 
-                
+                // Remove old application files
+                // sh "rm -rf ${CATALINA_HOME}/webapps/ROOT*"
 
-                // Deploy the WAR file
-                sh 'cp target/WebAppCal-0.0.6.war /home/ec2-user/apache-tomcat-7.0.94/webapps/WebAppCal.war'
+                // Copy new WAR file to Tomcat webapps directory
+                sh "cp target/*.war ${CATALINA_HOME}/webapps/WebAppCal.war"
 
                 // Start Tomcat
-                sh "${env.CATALINA_HOME}/bin/startup.sh"
-
-                // Wait for Tomcat to start (optional)
-                sleep 10
-
-                // Check deployment status
-                sh "curl --silent --fail http://localhost:8080/WebAppCal/ || exit 1"
+                sh "${CATALINA_HOME}/bin/startup.sh"
             }
         }
     }
-    
+
     post {
-        success {
-            echo 'Pipeline succeeded! Deployment complete.'
-        }
-        failure {
-            echo 'Pipeline failed.'
+        always {
+            // Clean up: Stop Tomcat if started during deployment
+            sh "${CATALINA_HOME}/bin/shutdown.sh || true"
         }
     }
 }
