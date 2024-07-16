@@ -1,23 +1,20 @@
 pipeline {
     agent any
-    }
-
+    
     stages {
         stage('Build') {
             steps {
                 sh '/opt/maven/bin/mvn clean package'
             }
         }
-
         stage('Test') {
             steps {
                 sh '/opt/maven/bin/mvn test'
             }
         }
-
         stage('Deploy') {
             steps {
-                // define deployment steps here 
+                // Define deployment steps here 
                 unstash 'jenkins-ci-cd2'
                 sh "sudo rm -rf ~/apache*/webapp/*.war"
                 sh "sudo mv target/*.war ~/apache*/webapps/"
@@ -26,9 +23,15 @@ pipeline {
             }
         }
     }
-
+    
     post {
         always {
             // Send email notification on completion
+            emailext subject: "Pipeline ${currentBuild.result}: ${env.JOB_NAME}",
+                     body: "Pipeline ${currentBuild.result}: ${env.JOB_NAME} (${env.BUILD_URL})",
+                     to: "recipient@example.com",
+                     replyTo: "noreply@example.com",
+                     mimeType: 'text/html'
         }
     }
+}
