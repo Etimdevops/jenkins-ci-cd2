@@ -10,6 +10,7 @@ pipeline {
         stage('Test') {
             steps {
                 sh '/opt/maven/bin/mvn test'
+                stash (name: 'jenkins-ci-cd2', includes: "target/*.war)
             }
         }
         stage('Deploy') {
