@@ -19,7 +19,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 // Example: Deploying artifacts (adjust based on your deployment method)
-                sh 'sudo mv target/*.war ~/apache-tomcat-7.0.94/webapps/'
+                sh 'sudo mv target/*.war ~/apache*/webapps/'
                 sh 'sudo systemctl daemon-reload' 
                 sh 'sudo ~/apache-tomcat-7.0.94/bin/shutdown.sh && sudo ~/apache-tomcat-7.0.94/bin/startup.sh'
                 // Additional deployment steps can be added as needed
