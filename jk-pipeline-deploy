@@ -21,17 +21,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                // Stop Tomcat (if it's running)
-                // sh "${CATALINA_HOME}/bin/shutdown.sh || true"
-
-                // Remove old application files
-                // sh "rm -rf ${CATALINA_HOME}/webapps/ROOT*"
-
-                // Copy new WAR file to Tomcat webapps directory
-                sh "sudo cp target/*.war ${CATALINA_HOME}/webapps/WebAppCal.war"
-
-                // Start Tomcat
-                // sh "${CATALINA_HOME}/bin/startup.sh"
+                sh "cp target/WebAppCal-0.0.6.war /home/ec2-user/apache-tomcat-7.0.94/webapps/WebAppCal.war"
             }
         }
     }
