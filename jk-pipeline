@@ -4,25 +4,40 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                // Example: Maven build
-                sh '/opt/maven/bin/mvn package'
+                echo 'Building the project...'
+                script {
+                    // Example: Maven build
+                    sh '/opt/maven/bin/mvn package'
+                }
             }
         }
-        
+
         stage('Test') {
             steps {
-                // Run tests (adjust according to your testing framework)
-                sh '/opt/maven/bin/mvn test'
+                echo 'Running tests...'
+                script {
+                    // Example: Run tests (adjust according to your testing framework)
+                    sh '/opt/maven/bin/mvn test'
+                }
             }
         }
-    }
-    
-    post {
-        success {
-            echo 'Pipeline succeeded! Deployment complete.'
-        }
-        failure {
-            echo 'Pipeline failed.'
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying the application...'
+                script {
+                    // Example: Copy artifact to remote server
+                    sh 'scp /var/lib/jenkins/workspace/pipeline_job/target/WebAppCal-0.0.6.war ec2-user@172.31.87.140:~/apache-tomcat-7.0.94/webapps/'
+                }
+            }
+            post {
+                success {
+                    echo 'Pipeline succeeded! Deployment complete.'
+                }
+                failure {
+                    echo 'Pipeline failed.'
+                }
+            }
         }
     }
 }
