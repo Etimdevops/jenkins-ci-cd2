@@ -27,7 +27,7 @@ pipeline {
                 echo 'Deploying the application...'
                 script {
                     // Example: Copy artifact to remote server
-                    sh 'scp /var/lib/jenkins/workspace/pipeline_job/target/WebAppCal-0.0.6.war ec2-user@172.31.87.140:~/apache-tomcat-7.0.94/webapps/'
+                    sh 'sudo scp /var/lib/jenkins/workspace/pipeline_job/target/WebAppCal-0.0.6.war ec2-user@172.31.87.140:~/apache-tomcat-7.0.94/webapps/'
                 }
             }
             post {
