@@ -4,14 +4,14 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                // Example: Maven build
+                echo 'build stage'
                 sh '/opt/maven/bin/mvn package'
             }
         }
         
         stage('Test') {
             steps {
-                // Run tests (adjust according to your testing framework)
+                echo 'Run tests'
                 sh '/opt/maven/bin/mvn test'
             }
         }
