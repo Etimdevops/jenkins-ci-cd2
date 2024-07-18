@@ -20,7 +20,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 unstash 'jenkins-ci-cd'
-                sh "echo admin123 | sudo -S mv target/WebAppCal-0.0.6.war' ~/apache*/webapps/"
+                sh "echo admin123 | sudo -S mv target/WebAppCal-0.0.6.war ~/apache*/webapps/"
+
             }
         }
     }
