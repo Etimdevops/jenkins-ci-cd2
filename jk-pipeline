@@ -1,6 +1,11 @@
 pipeline {
     agent any
     
+    environment {
+        REMOTE_SERVER = '172.31.87.140'
+        REMOTE_USERNAME = 'ec2-user'
+    }
+    
     stages {
         stage('Build') {
             steps {
@@ -24,9 +29,8 @@ pipeline {
                     def remoteDir = "~/apache-tomcat-7.0.94/webapps"
                     def warFile = "target/WebAppCal-0.0.6.war"
                     
-                    sshagent(credentials: ['jenkinsmaster']) {
-                        // Use SCP to copy WAR file to remote server
-                        sh "scp -o StrictHostKeyChecking=no ${warFile} ec2-user@172.31.87.140:${remoteDir}"
+                    withCredentials([usernamePassword(credentialsId: 'jenkinsmaster', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
+                        sh "scp -o StrictHostKeyChecking=no ${warFile} ${USERNAME}@${REMOTE_SERVER}:${remoteDir}"
                     }
                 }
             }
