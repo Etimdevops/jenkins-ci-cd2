@@ -15,6 +15,19 @@ pipeline {
                 sh '/opt/maven/bin/mvn test'
             }
         }
+
+        stage('Deploy to Tomcat') {
+            environment {
+                TOMCAT_URL = 'http://3.84.55.193:8080/'
+                WAR_FILE = "target/WebAppCal-0.0.6.war"
+            }
+            steps {
+                script {
+                    // Deploy to Tomcat using curl
+                    sh "curl -T ${WAR_FILE} ${TOMCAT_URL}/manager/text/deploy?path=/your-application&update=true"
+                }
+            }
+        }
     }
     
     post {
