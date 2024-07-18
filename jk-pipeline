@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     stages {
         stage('Build') {
             steps {
@@ -20,8 +20,15 @@ pipeline {
         stage('Deploy') {
             steps {
                 unstash 'jenkins-ci-cd'
-                sh "echo admin123 | sudo -S mv target/*.war ~/apache*/webapps/"
-
+                script {
+                    def remoteDir = "~/apache-tomcat-7.0.94/webapps"
+                    def warFile = "target/WebAppCal-0.0.6.war"
+                    
+                    sshagent(credentials: ['jenkinsmaster']) {
+                        // Use SCP to copy WAR file to remote server
+                        sh "scp -o StrictHostKeyChecking=no ${warFile} ec2-user@172.31.87.140:${remoteDir}"
+                    }
+                }
             }
         }
     }
