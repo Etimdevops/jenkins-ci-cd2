@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+    
+    stages {
+        stage('Build') {
+            steps {
+                script {
+                    sh '/opt/maven/bin/mvn clean package'
+                }
+            }
+        }
+        stage('Test') {
+            steps {
+                script {
+                    sh '/opt/maven/bin/mvn test'
+                }
+            }
+        }
+        stage('Deploy') {
+            steps {
+                script {
+                    // Unstash files if necessary
+                    unstash 'jenkins-ci-cd2'
+                    // Remove existing war files from Tomcat webapps directory
+                    sh "sudo rm -rf ~/apache*/webapps/*.war"
+                    // Deploy the newly built war file to Tomcat webapps directory
+                    sh "sudo mv target/*.war ~/apache*/webapps/"
+                    // Reload systemd daemon
+                    sh "sudo systemctl daemon-reload"
+                    // Restart Tomcat
+                    sh "sudo ~/apache-tomcat-7.0.94/bin/shutdown.sh && sudo ~/apache-tomcat-7.0.94/bin/startup.sh"
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            // Send email notification on completion
+            emailext subject: "Pipeline ${currentBuild.result}: ${env.JOB_NAME}",
+                     body: "Pipeline ${currentBuild.result}: ${env.JOB_NAME} (${env.BUILD_URL})",
+                     to: "recipient@example.com",
+                     replyTo: "noreply@example.com",
+                     mimeType: 'text/html'
+        }
+    }
+}
