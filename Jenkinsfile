@@ -49,8 +49,8 @@ pipeline {
                     // Move the WAR file to the target directory
                     sh 'mv target/*.war /home/ec2-user/apache-tomcat-8.5.55/webapps/'
 
-                    // Ensure proper permissions
-                    sh 'chmod +x /home/ec2-user/apache-tomcat-8.5.55/bin/*.sh'
+                    // Change permission for Tomcat startup script
+                    sh 'chmod +x /home/ec2-user/apache-tomcat-8.5.55/bin/startup.sh'
 
                     // Start Tomcat
                     sh '/home/ec2-user/apache-tomcat-8.5.55/bin/startup.sh'
