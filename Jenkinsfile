@@ -17,32 +17,39 @@ pipeline {
         }
         
         stage('Deploy') {
-            agent {
-                label 'node3'
-            }
-            steps {
-                echo 'Deploying to Tomcat'
+    agent {
+        label 'node3' // Replace with the label of the node you want to deploy to
+    }
+    steps {
+        echo 'Deploying to Tomcat'
 
-                script {
-                    // Download and install Apache Tomcat
-                    def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
-                    sh "powershell -command \"Invoke-WebRequest -Uri ${tomcatUrl} -OutFile tomcat.tar.gz\""
-                    sh '7z x tomcat.tar.gz -otomcat'
+        script {
+            // Download and install Apache Tomcat using curl or wget
+            def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
+            // sh "curl -o tomcat.tar.gz ${tomcatUrl}"  // Use curl command
+            // OR
+            sh "wget ${tomcatUrl} -O tomcat.tar.gz"  // Use wget command
 
-                    // Create the target directory if it doesn't exist
-                    sh 'mkdir C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
+            sh 'tar -xzvf tomcat.tar.gz -C tomcat'
 
-                    // Remove existing WAR files (adjust path as necessary)
-                    sh 'del /Q C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps\\*.war'
+            // Create the target directory if it doesn't exist
+            sh 'mkdir -p C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
 
-                    // Restore stashed WAR file (assuming it's stashed as 'Jenkinscicdfinal')
-                    unstash 'Jenkinscicdfinal'
+            // Remove existing WAR files (adjust path as necessary)
+            sh 'rm -f C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps\\*.war'
 
-                    // Move the WAR file to the target directory
-                    sh 'move target\\*.war C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
+            // Restore stashed WAR file (assuming it's stashed as 'Jenkinscicdfinal')
+            unstash 'Jenkinscicdfinal'
 
-                    // Restart Tomcat (adjust path as necessary)
-                    sh 'C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\bin\\startup.bat'
+            // Move the WAR file to the target directory
+            sh 'mv target/*.war C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
+
+            // Start Tomcat (adjust path as necessary)
+            sh 'C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\bin\\startup.bat'
+        }
+    }
+}
+
                 }
             }
         }
