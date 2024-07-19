@@ -17,6 +17,9 @@ pipeline {
         }
         
         stage('Deploy') {
+            agent {
+                label 'node3'
+            }
             steps {
                 echo 'Deploying to Tomcat'
 
