@@ -5,29 +5,43 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Build stage'
-                sh '/opt/maven/bin/mvn clean package'
+                bat 'mvn clean package'  // Assuming Maven is installed and configured on the Jenkins agent
             }
         }
         
         stage('Test') {
             steps {
                 echo 'Run tests'
-                sh '/opt/maven/bin/mvn test'
+                bat 'mvn test'  // Execute Maven tests
             }
         }
         
         stage('Deploy') {
+            agent {
+                label 'node1'  // Assuming 'node1' is the label for your Jenkins agent
+            }
             steps {
                 echo 'Deploying to Tomcat'
 
-                // Create the webapps directory if it doesn't exist
-                sh 'mkdir -p /var/lib/jenkins/apache-tomcat-7.0.94/webapps'
+                // Download and install Apache Tomcat
+                def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
+                bat "powershell -command \"Invoke-WebRequest -Uri ${tomcatUrl} -OutFile tomcat.tar.gz\""  // Use PowerShell to download Tomcat
+                bat '7z x tomcat.tar.gz -otomcat'  // Extract using 7-Zip (assuming 7-Zip is installed)
 
-                // Copy the WAR file to the webapps directory
-                sh 'cp /var/lib/jenkins/workspace/jenkins-ci-cd/target/WebAppCal-0.0.6.war /var/lib/jenkins/apache-tomcat-7.0.94/webapps/'
+                // Create the target directory if it doesn't exist
+                bat 'mkdir C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
 
-                // Restart Tomcat (if necessary)
-                sh 'sudo systemctl restart tomcat8'
+                // Remove existing WAR files (adjust path as necessary)
+                bat 'del /Q C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps\\*.war'
+
+                // Restore stashed WAR file (assuming it's stashed as 'Jenkinscicdfinal')
+                unstash "Jenkinscicdfinal"
+
+                // Move the WAR file to the target directory
+                bat 'move target\\*.war C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
+
+                // Restart Tomcat (adjust path as necessary)
+                bat 'C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\bin\\startup.bat'
             }
         }
     }
