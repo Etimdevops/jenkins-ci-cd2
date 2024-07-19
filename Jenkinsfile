@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'node1'
+        label 'node2'
     }
 
     stages {
@@ -20,7 +20,7 @@ pipeline {
         
         stage('Deploy') {
             agent {
-                label 'node1'
+                label 'node2'
             }
             steps {
                 echo 'Deploying to Tomcat'
