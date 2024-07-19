@@ -34,8 +34,8 @@ pipeline {
                     sh "wget ${tomcatUrl} -O tomcat.tar.gz"
                     
                     // Extract Tomcat
-                    sh 'mkdir -p tomcat'
-                    sh 'tar -xzvf tomcat.tar.gz -C tomcat --strip-components=1'
+                    sh 'mkdir -p /home/ec2-user/apache-tomcat-8.5.55'
+                    sh 'tar -xzvf tomcat.tar.gz -C /home/ec2-user/apache-tomcat-8.5.55 --strip-components=1'
                     
                     // Create the target directory if it doesn't exist
                     sh 'mkdir -p /home/ec2-user/apache-tomcat-8.5.55/webapps'
