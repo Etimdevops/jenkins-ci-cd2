@@ -25,7 +25,8 @@ pipeline {
 
                 script {
                     // Corrected Tomcat download URL
-                    def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.55/bin/apache-tomcat-8.5.55.tar.gz'
+                    def tomcatUrl = 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.55/bin/apache-tomcat-8.5.55.tar.gz'
+                    
                     
                     // Download Tomcat using wget
                     sh "wget ${tomcatUrl} -O tomcat.tar.gz"
