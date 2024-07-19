@@ -18,16 +18,18 @@ pipeline {
         
         stage('Deploy') {
             steps {
-        echo 'Deploying to Tomcat'
+                echo 'Deploying to Tomcat'
 
-        // Adjust the path to your WAR file and Tomcat webapps directory accordingly
-        sh 'cp /var/lib/jenkins/workspace/jenkins-ci-cd/target/WebAppCal-0.0.6.war ~/apache-tomcat-7.0.94/webapps/'
+                // Create the webapps directory if it doesn't exist
+                sh 'mkdir -p /var/lib/jenkins/apache-tomcat-7.0.94/webapps'
 
-        // Restart Tomcat (if necessary)
-        sh 'sudo systemctl restart tomcat8'
+                // Copy the WAR file to the webapps directory
+                sh 'cp /var/lib/jenkins/workspace/jenkins-ci-cd/target/WebAppCal-0.0.6.war /var/lib/jenkins/apache-tomcat-7.0.94/webapps/'
+
+                // Restart Tomcat (if necessary)
+                sh 'sudo systemctl restart tomcat8'
             }
         }
-
     }
     
     post {
