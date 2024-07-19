@@ -1,41 +1,49 @@
 pipeline {
-    agent any
+    agent {
+        label 'node1'
+    }
 
     stages {
         stage('Build') {
             steps {
                 echo 'Build stage'
-                bat 'mvn clean package'
+                sh '/opt/maven/bin/mvn clean package'
             }
         }
         
         stage('Test') {
             steps {
                 echo 'Run tests'
-                bat 'mvn test'
+                sh '/opt/maven/bin/mvn test'
             }
         }
         
         stage('Deploy') {
             agent {
-                label 'node1'
+                label 'node1'  // Assuming 'node1' is the label for your Jenkins agent
             }
             steps {
                 echo 'Deploying to Tomcat'
 
-                script {
-                    // Define the URL to download Apache Tomcat
-                    def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
+                // Download and install Apache Tomcat
+                def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
+                bat "powershell -command \"Invoke-WebRequest -Uri ${tomcatUrl} -OutFile tomcat.tar.gz\""  // Use PowerShell to download Tomcat
+                bat '7z x tomcat.tar.gz -otomcat'  // Extract using 7-Zip (assuming 7-Zip is installed)
 
-                    // Download and install Apache Tomcat
-                    sh "wget -q -O tomcat.tar.gz ${tomcatUrl}"
-                    sh "sudo tar -xzf tomcat.tar.gz -C /opt"
+                // Create the target directory if it doesn't exist
+                bat 'mkdir C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
 
-                    // Additional deployment steps
-                    sh "mkdir -p /home/ec2-user/apache-tomcat-8.5.99/webapps"
-                    sh "sudo mv target/*.war /home/ec2-user/apache-tomcat-8.5.99/webapps/"
-                    sh "sudo /opt/apache-tomcat-8.5.99/bin/startup.sh"
-                }
+                // Remove existing WAR files (adjust path as necessary)
+                bat 'del /Q C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps\\*.war'
+
+                // Restore stashed WAR file (assuming it's stashed as 'Jenkinscicdfinal')
+                unstash "Jenkinscicdfinal"
+
+                // Move the WAR file to the target directory
+                bat 'move target\\*.war C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\webapps'
+
+                // Restart Tomcat (adjust path as necessary)
+                bat 'C:\\Users\\ec2-user\\apache-tomcat-8.5.99\\bin\\startup.bat'
             }
         }
     }
