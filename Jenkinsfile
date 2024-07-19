@@ -24,26 +24,29 @@ pipeline {
                 echo 'Deploying to Tomcat'
 
                 script {
-                    // Download and install Apache Tomcat using wget
-                    def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.99/bin/apache-tomcat-8.5.99.tar.gz'
-                    sh "wget ${tomcatUrl} -O tomcat.tar.gz"  // Use wget command to download Tomcat
-
-                    sh 'tar -xzvf tomcat.tar.gz -C tomcat'  // Extract Tomcat
-
+                    // Corrected Tomcat download URL
+                    def tomcatUrl = 'https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.55/bin/apache-tomcat-8.5.55.tar.gz'
+                    
+                    // Download Tomcat using wget
+                    sh "wget ${tomcatUrl} -O tomcat.tar.gz"
+                    
+                    // Extract Tomcat
+                    sh 'tar -xzvf tomcat.tar.gz -C tomcat'
+                    
                     // Create the target directory if it doesn't exist
-                    sh 'mkdir -p /home/ec2-user/apache-tomcat-8.5.99/webapps'
+                    sh 'mkdir -p /home/ec2-user/apache-tomcat-8.5.55/webapps'
 
                     // Remove existing WAR files (adjust path as necessary)
-                    sh 'rm -f /home/ec2-user/apache-tomcat-8.5.99/webapps/*.war'
+                    sh 'rm -f /home/ec2-user/apache-tomcat-8.5.55/webapps/*.war'
 
                     // Restore stashed WAR file (assuming it's stashed as 'Jenkinscicdfinal')
                     unstash 'Jenkinscicdfinal'
 
                     // Move the WAR file to the target directory
-                    sh 'mv target/*.war /home/ec2-user/apache-tomcat-8.5.99/webapps'
+                    sh 'mv target/*.war /home/ec2-user/apache-tomcat-8.5.55/webapps'
 
                     // Start Tomcat (adjust path as necessary)
-                    sh '/home/ec2-user/apache-tomcat-8.5.99/bin/startup.sh'
+                    sh '/home/ec2-user/apache-tomcat-8.5.55/bin/startup.sh'
                 }
             }
         }
