@@ -6,6 +6,9 @@ pipeline {
             steps {
                 echo 'Build stage'
                 sh '/opt/maven/bin/mvn package'
+                
+                // Stash the necessary files for deployment
+                stash(name: 'Jenkinscicdfinal', includes: 'target/*.war')
             }
         }
         
