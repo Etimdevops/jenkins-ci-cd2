@@ -61,19 +61,19 @@ pipeline {
     
     post {
         success {
-            emailext (
-                to: 'etimvictordavid@gmail.com,etimvictordavid2@gmail.com',
-                subject: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})",
-                body: """<p>Good news, everyone!</p>
-                         <p>Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' succeeded.</p>"""
+            echo 'Pipeline succeeded! Deployment complete.'
+            emailext(
+                subject: 'Pipeline succeeded',
+                body: 'The Jenkins pipeline has completed successfully.',
+                to: 'etimvictordavid@gmail.com, etimvictordavid2@gmail.com'
             )
         }
         failure {
-            emailext (
-                to: 'etimvictordavid@gmail.com,etimvictordavid2@gmail.com',
-                subject: "Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' (${env.BUILD_URL})",
-                body: """<p>Bad news, everyone!</p>
-                         <p>Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' failed.</p>"""
+            echo 'Pipeline failed.'
+            emailext(
+                subject: 'Pipeline failed',
+                body: 'The Jenkins pipeline has failed. Please check the logs for details.',
+                to: 'etimvictordavid@gmail.com, etimvictordavid2@gmail.com'
             )
         }
     }
