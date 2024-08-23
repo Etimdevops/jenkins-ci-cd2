@@ -3,25 +3,34 @@
   hosts: n1
   become: yes
   tasks:
-    - name: Install OpenJDK 11 manually on Amazon Linux
+    - name: Install OpenJDK 17 manually on Amazon Linux
       when: ansible_distribution == 'Amazon'
       block:
-        - name: Download OpenJDK 11 tarball
+        - name: Download OpenJDK 17 tarball
           get_url:
             url: https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
             dest: /tmp/jdk-17_linux-x64_bin.tar.gz
 
-        - name: Extract OpenJDK 11
+        - name: Extract OpenJDK 17
           unarchive:
             src: /tmp/jdk-17_linux-x64_bin.tar.gz
             dest: /opt/
             remote_src: yes
 
+        - name: List extracted files (for debugging)
+          command: ls -l /opt
+          register: extracted_files
+
+        - name: Display extracted files
+          debug:
+            var: extracted_files.stdout_lines
+
         - name: Create symlink for Java
           file:
-            src: /opt/jdk-17
+            src: /opt/jdk-17.0.8
             dest: /usr/local/java
             state: link
+            force: yes
 
         - name: Set Java environment variables
           lineinfile:
@@ -51,6 +60,7 @@
             src: /opt/apache-maven-3.8.6
             dest: /usr/local/maven
             state: link
+            force: yes
 
         - name: Set Maven environment variables
           lineinfile:
