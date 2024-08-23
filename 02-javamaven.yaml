@@ -5,16 +5,40 @@
   tasks:
     - name: Install Java and Maven on Amazon Linux 2 or Red Hat-based systems
       block:
-        - name: Install OpenJDK 11 on Amazon Linux 2
+        - name: Install OpenJDK 8 on Amazon Linux 2
           when: ansible_distribution == 'Amazon'
           yum:
-            name: java-11-openjdk
+            name: java-1.8.0-openjdk
             state: present
 
-        - name: Install Maven on Amazon Linux 2
+        - name: Install Maven on Amazon Linux 2 from a direct URL
           when: ansible_distribution == 'Amazon'
-          yum:
-            name: maven
+          get_url:
+            url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+            dest: /tmp/apache-maven-3.8.6-bin.tar.gz
+
+        - name: Extract Maven archive
+          when: ansible_distribution == 'Amazon'
+          unarchive:
+            src: /tmp/apache-maven-3.8.6-bin.tar.gz
+            dest: /opt/
+            remote_src: yes
+
+        - name: Create symlink for Maven
+          when: ansible_distribution == 'Amazon'
+          file:
+            src: /opt/apache-maven-3.8.6
+            dest: /usr/local/maven
+            state: link
+
+        - name: Set Maven environment variables
+          when: ansible_distribution == 'Amazon'
+          lineinfile:
+            path: /etc/profile.d/maven.sh
+            line: |
+              export M2_HOME=/usr/local/maven
+              export PATH=${M2_HOME}/bin:${PATH}
+            create: yes
             state: present
 
         - name: Install OpenJDK 11 on Red Hat-based systems
