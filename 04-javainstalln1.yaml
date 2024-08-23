@@ -2,23 +2,25 @@
   hosts: n1
   become: yes
   tasks:
-    - name: Check Java installation path
-      command: ls -l /usr/local/java/bin/java
+    - name: Ensure Java installation path exists
+      file:
+        path: /usr/local/java/bin/java
+        state: file
       register: java_path_check
-      ignore_errors: yes
 
-    - name: Check Maven installation path
-      command: ls -l /usr/local/maven/bin/mvn
+    - name: Ensure Maven installation path exists
+      file:
+        path: /usr/local/maven/bin/mvn
+        state: file
       register: maven_path_check
-      ignore_errors: yes
 
     - name: Display Java installation path check
       debug:
-        msg: "Java installation path: {{ java_path_check.stdout_lines | default('Java not found') }}"
+        msg: "Java installation path: {{ java_path_check.path | default('Java not found') }}"
 
     - name: Display Maven installation path check
       debug:
-        msg: "Maven installation path: {{ maven_path_check.stdout_lines | default('Maven not found') }}"
+        msg: "Maven installation path: {{ maven_path_check.path | default('Maven not found') }}"
 
     - name: Verify Java installation
       command: /usr/local/java/bin/java -version
