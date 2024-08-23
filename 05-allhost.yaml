@@ -77,23 +77,6 @@
             line: 'export PATH=$M2_HOME/bin:$PATH'
             create: yes
 
-    - name: Reload environment variables and verify installations (Ubuntu)
-      when: ansible_distribution == 'Ubuntu'
-      shell: |
-        bash -c "source /etc/profile && java -version && mvn -v"
-      register: environment_vars
-      ignore_errors: yes
-
-    - name: Display Java version or error (Ubuntu)
-      when: ansible_distribution == 'Ubuntu'
-      debug:
-        msg: "{{ environment_vars.stdout_lines | default('Java installation failed.') }}"
-
-    - name: Display Maven version or error (Ubuntu)
-      when: ansible_distribution == 'Ubuntu'
-      debug:
-        msg: "{{ environment_vars.stdout_lines | default('Maven installation failed.') }}"
-
     - name: Set environment variables for Java and Maven (RedHat and Amazon Linux)
       when: ansible_distribution in ['RedHat', 'Amazon']
       block:
@@ -121,20 +104,23 @@
             line: 'export PATH=$M2_HOME/bin:$PATH'
             create: yes
 
-    - name: Reload environment variables and verify installations (RedHat and Amazon Linux)
-      when: ansible_distribution in ['RedHat', 'Amazon']
+    - name: Verify Java installation
       shell: |
-        bash -c "source /etc/profile && java -version && mvn -v"
-      register: environment_vars
+        java -version
+      register: java_version
       ignore_errors: yes
 
-    - name: Display Java version or error (RedHat and Amazon Linux)
-      when: ansible_distribution in ['RedHat', 'Amazon']
-      debug:
-        msg: "{{ environment_vars.stdout_lines | default('Java installation failed.') }}"
+    - name: Verify Maven installation
+      shell: |
+        mvn -v
+      register: maven_version
+      ignore_errors: yes
 
-    - name: Display Maven version or error (RedHat and Amazon Linux)
-      when: ansible_distribution in ['RedHat', 'Amazon']
+    - name: Display Java version or error
       debug:
-        msg: "{{ environment_vars.stdout_lines | default('Maven installation failed.') }}"
+        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
+
+    - name: Display Maven version or error
+      debug:
+        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
 ...
