@@ -71,20 +71,43 @@
             name: maven
             state: present
 
-    - name: Verify Java installation on Amazon Linux
-      when: ansible_distribution == 'Amazon'
-      command: >
-        /bin/bash -c "export JAVA_HOME=/usr/local/java && export PATH=${JAVA_HOME}/bin:${PATH} && java -version"
+    - name: Set environment variables for Java and Maven
+      block:
+        - name: Set JAVA_HOME for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export JAVA_HOME=/usr/local/java'
+            create: yes
+
+        - name: Set PATH for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$JAVA_HOME/bin:$PATH'
+            create: yes
+
+        - name: Set M2_HOME for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export M2_HOME=/usr/local/maven'
+            create: yes
+
+        - name: Set PATH for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$M2_HOME/bin:$PATH'
+            create: yes
+
+    - name: Apply environment variables
+      shell: source /etc/profile
+
+    - name: Verify Java installation
+      shell: java -version
       register: java_version
-      changed_when: false
       ignore_errors: yes
 
-    - name: Verify Maven installation on Amazon Linux
-      when: ansible_distribution == 'Amazon'
-      command: >
-        /bin/bash -c "export M2_HOME=/usr/local/maven && export PATH=${M2_HOME}/bin:${PATH} && mvn -v"
+    - name: Verify Maven installation
+      shell: mvn -v
       register: maven_version
-      changed_when: false
       ignore_errors: yes
 
     - name: Display Java version or error
