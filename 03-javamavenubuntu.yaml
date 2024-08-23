@@ -1,6 +1,6 @@
 ---
 - name: Install Java and Maven on Amazon Linux, Red Hat-based, and Ubuntu systems
-  hosts: n1
+  hosts: all
   become: yes
   tasks:
     - name: Install OpenJDK 17 manually on Amazon Linux
@@ -17,17 +17,9 @@
             dest: /opt/
             remote_src: yes
 
-        - name: List extracted files (for debugging)
-          command: ls -l /opt
-          register: extracted_files
-
-        - name: Display extracted files
-          debug:
-            var: extracted_files.stdout_lines
-
         - name: Create symlink for Java
           file:
-            src: /opt/jdk-17.0.8
+            src: /opt/jdk-17
             dest: /usr/local/java
             state: link
             force: yes
@@ -40,6 +32,11 @@
               export PATH=${JAVA_HOME}/bin:${PATH}
             create: yes
             state: present
+
+        - name: Source Java environment variables
+          shell: source /etc/profile.d/java.sh
+          register: java_env_source
+          changed_when: false
 
     - name: Install Maven on Amazon Linux from a direct URL
       when: ansible_distribution == 'Amazon'
@@ -71,6 +68,11 @@
             create: yes
             state: present
 
+        - name: Source Maven environment variables
+          shell: source /etc/profile.d/maven.sh
+          register: maven_env_source
+          changed_when: false
+
     - name: Install OpenJDK 11 on Red Hat-based systems
       when: ansible_distribution == 'RedHat'
       yum:
@@ -101,7 +103,7 @@
             state: present
 
     - name: Verify Java installation
-      command: java -version
+      shell: source /etc/profile.d/java.sh && java -version
       register: java_version
       changed_when: false
       ignore_errors: yes
@@ -111,7 +113,7 @@
         msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
 
     - name: Verify Maven installation
-      command: mvn -v
+      shell: source /etc/profile.d/maven.sh && mvn -v
       register: maven_version
       changed_when: false
       ignore_errors: yes
