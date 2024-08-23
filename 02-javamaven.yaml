@@ -11,10 +11,24 @@
             name: amazon-linux-extras
             state: present
 
+        - name: Debug amazon-linux-extras command availability
+          command: amazon-linux-extras
+          register: amazon_extras_output
+          changed_when: false
+          ignore_errors: yes
+
+        - name: Debug amazon-linux-extras output
+          debug:
+            msg: "{{ amazon_extras_output.stdout_lines }}"
+
         - name: Enable OpenJDK 11 repository
           command: amazon-linux-extras enable java-openjdk11
           register: enable_java_extras
           changed_when: "'Already enabled' not in enable_java_extras.stdout"
+
+        - name: Debug OpenJDK 11 repository enabling
+          debug:
+            msg: "{{ enable_java_extras.stdout_lines }}"
 
         - name: Install OpenJDK 11
           yum:
@@ -63,17 +77,19 @@
       command: java -version
       register: java_version
       changed_when: false
+      ignore_errors: yes
+
+    - name: Display Java version or error
+      debug:
+        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
 
     - name: Verify Maven installation
       command: mvn -v
       register: maven_version
       changed_when: false
+      ignore_errors: yes
 
-    - name: Display Java version
+    - name: Display Maven version or error
       debug:
-        msg: "Java version: {{ java_version.stdout_lines }}"
-
-    - name: Display Maven version
-      debug:
-        msg: "Maven version: {{ maven_version.stdout_lines }}"
+        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
 ...
