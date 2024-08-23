@@ -24,15 +24,6 @@
             state: link
             force: yes
 
-        - name: Set Java environment variables
-          lineinfile:
-            path: /etc/profile.d/java.sh
-            line: |
-              export JAVA_HOME=/usr/local/java
-              export PATH=${JAVA_HOME}/bin:${PATH}
-            create: yes
-            state: present
-
         - name: Install Maven on Amazon Linux from a direct URL
           get_url:
             url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
@@ -50,15 +41,6 @@
             dest: /usr/local/maven
             state: link
             force: yes
-
-        - name: Set Maven environment variables
-          lineinfile:
-            path: /etc/profile.d/maven.sh
-            line: |
-              export M2_HOME=/usr/local/maven
-              export PATH=${M2_HOME}/bin:${PATH}
-            create: yes
-            state: present
 
     - name: Install OpenJDK 11 on Red Hat-based systems
       when: ansible_distribution == 'RedHat'
@@ -89,18 +71,18 @@
             name: maven
             state: present
 
-    - name: Ensure environment variables are applied
-      ansible.builtin.shell: |
-        source /etc/profile.d/java.sh
-        java -version
+    - name: Verify Java installation on Amazon Linux
+      when: ansible_distribution == 'Amazon'
+      command: >
+        /bin/bash -c "export JAVA_HOME=/usr/local/java && export PATH=${JAVA_HOME}/bin:${PATH} && java -version"
       register: java_version
       changed_when: false
       ignore_errors: yes
 
-    - name: Ensure environment variables are applied for Maven
-      ansible.builtin.shell: |
-        source /etc/profile.d/maven.sh
-        mvn -v
+    - name: Verify Maven installation on Amazon Linux
+      when: ansible_distribution == 'Amazon'
+      command: >
+        /bin/bash -c "export M2_HOME=/usr/local/maven && export PATH=${M2_HOME}/bin:${PATH} && mvn -v"
       register: maven_version
       changed_when: false
       ignore_errors: yes
@@ -112,26 +94,4 @@
     - name: Display Maven version or error
       debug:
         msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
-
-    - name: Debug Java installation directory
-      ansible.builtin.command:
-        cmd: ls -l /usr/local/java
-      register: java_dir
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Debug Maven installation directory
-      ansible.builtin.command:
-        cmd: ls -l /usr/local/maven
-      register: maven_dir
-      changed_when: false
-      ignore_errors: yes
-
-    - name: Display Java installation directory
-      debug:
-        msg: "{{ java_dir.stdout_lines | default('Could not list Java installation directory.') }}"
-
-    - name: Display Maven installation directory
-      debug:
-        msg: "{{ maven_dir.stdout_lines | default('Could not list Maven installation directory.') }}"
 ...
