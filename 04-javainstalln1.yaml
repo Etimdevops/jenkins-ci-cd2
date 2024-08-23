@@ -1,87 +1,20 @@
-- name: Install Java and Maven on Amazon Linux
-  hosts: n1
+---
+- name: Install Java and Maven on Amazon Linux 2
+  hosts: amazon_linux
   become: yes
   tasks:
-    - name: Download OpenJDK 17 tarball
-      get_url:
-        url: https://download.java.net/java/early_access/jdk17/36/GPL/openjdk-17_linux-x64_bin.tar.gz
-        dest: /tmp/openjdk-17_linux-x64_bin.tar.gz
-      tags: java
+    - name: Update package repository
+      amazon.aws.aws_ssm:
+        name: amazon-linux-extras
+        state: present
 
-    - name: Extract OpenJDK 17
-      unarchive:
-        src: /tmp/openjdk-17_linux-x64_bin.tar.gz
-        dest: /usr/local
-        remote_src: yes
-      tags: java
+    - name: Install Java 11
+      package:
+        name: java-11-amazon-corretto
+        state: present
 
-    - name: Create symlink for Java
-      file:
-        src: /usr/local/jdk-17
-        dest: /usr/local/java
-        state: link
-      tags: java
-
-    - name: Create java.sh to set JAVA_HOME
-      copy:
-        dest: /etc/profile.d/java.sh
-        content: |
-          export JAVA_HOME=/usr/local/java
-          export PATH=$JAVA_HOME/bin:$PATH
-      tags: java
-
-    - name: Download Maven tarball
-      get_url:
-        url: https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
-      tags: maven
-
-    - name: Extract Maven archive
-      unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
-        dest: /usr/local
-        remote_src: yes
-      tags: maven
-
-    - name: Create symlink for Maven
-      file:
-        src: /usr/local/apache-maven-3.8.6
-        dest: /usr/local/maven
-        state: link
-      tags: maven
-
-    - name: Create maven.sh to set M2_HOME
-      copy:
-        dest: /etc/profile.d/maven.sh
-        content: |
-          export M2_HOME=/usr/local/maven
-          export PATH=$M2_HOME/bin:$PATH
-      tags: maven
-
-    - name: Apply environment variables
-      shell: |
-        source /etc/profile.d/java.sh
-        source /etc/profile.d/maven.sh
-      tags: environment
-
-    - name: Verify Java installation
-      command: /usr/local/java/bin/java -version
-      register: java_version
-      ignore_errors: yes
-      tags: verify
-
-    - name: Verify Maven installation
-      command: /usr/local/maven/bin/mvn -v
-      register: maven_version
-      ignore_errors: yes
-      tags: verify
-
-    - name: Display Java version or error
-      debug:
-        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
-      tags: verify
-
-    - name: Display Maven version or error
-      debug:
-        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
-      tags: verify
+    - name: Install Maven
+      package:
+        name: maven
+        state: present
+...
