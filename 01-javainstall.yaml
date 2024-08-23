@@ -33,4 +33,4 @@
     - name: Display Maven version
       debug:
         msg: "Maven version: {{ maven_version.stdout_lines }}"
-
+...
