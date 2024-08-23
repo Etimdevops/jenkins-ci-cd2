@@ -1,38 +1,44 @@
 ---
-- name: Install Java and Maven on Amazon Linux and Red Hat-based systems
+- name: Install Java and Maven on Amazon Linux 2 and Red Hat-based systems
   hosts: all
   become: yes
   tasks:
-    - name: Install Java and Maven on Amazon Linux 2 or Red Hat-based systems
+    - name: Install OpenJDK 11 on Amazon Linux 2
+      when: ansible_distribution == 'Amazon'
       block:
-        - name: Install OpenJDK 8 on Amazon Linux 2
-          when: ansible_distribution == 'Amazon'
+        - name: Install amazon-linux-extras
           yum:
-            name: java-1.8.0-openjdk
+            name: amazon-linux-extras
+            state: present
+
+        - name: Enable OpenJDK 11 repository
+          command: amazon-linux-extras enable java-openjdk11
+          register: enable_java_extras
+          changed_when: "'Already enabled' not in enable_java_extras.stdout"
+
+        - name: Install OpenJDK 11
+          yum:
+            name: java-11-openjdk
             state: present
 
         - name: Install Maven on Amazon Linux 2 from a direct URL
-          when: ansible_distribution == 'Amazon'
           get_url:
             url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
             dest: /tmp/apache-maven-3.8.6-bin.tar.gz
 
         - name: Extract Maven archive
-          when: ansible_distribution == 'Amazon'
           unarchive:
             src: /tmp/apache-maven-3.8.6-bin.tar.gz
             dest: /opt/
             remote_src: yes
 
         - name: Create symlink for Maven
-          when: ansible_distribution == 'Amazon'
           file:
             src: /opt/apache-maven-3.8.6
             dest: /usr/local/maven
             state: link
 
         - name: Set Maven environment variables
-          when: ansible_distribution == 'Amazon'
           lineinfile:
             path: /etc/profile.d/maven.sh
             line: |
@@ -41,17 +47,17 @@
             create: yes
             state: present
 
-        - name: Install OpenJDK 11 on Red Hat-based systems
-          when: ansible_distribution == 'RedHat'
-          yum:
-            name: java-11-openjdk
-            state: present
+    - name: Install OpenJDK 11 on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-11-openjdk
+        state: present
 
-        - name: Install Maven on Red Hat-based systems
-          when: ansible_distribution == 'RedHat'
-          yum:
-            name: maven
-            state: present
+    - name: Install Maven on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: maven
+        state: present
 
     - name: Verify Java installation
       command: java -version
