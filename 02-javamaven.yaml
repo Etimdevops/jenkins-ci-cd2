@@ -1,0 +1,49 @@
+---
+- name: Install Java and Maven on Amazon Linux and Red Hat-based systems
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Java and Maven on Amazon Linux 2 or Red Hat-based systems
+      block:
+        - name: Install OpenJDK 11 on Amazon Linux 2
+          when: ansible_distribution == 'Amazon'
+          yum:
+            name: java-11-openjdk
+            state: present
+
+        - name: Install Maven on Amazon Linux 2
+          when: ansible_distribution == 'Amazon'
+          yum:
+            name: maven
+            state: present
+
+        - name: Install OpenJDK 11 on Red Hat-based systems
+          when: ansible_distribution == 'RedHat'
+          yum:
+            name: java-11-openjdk
+            state: present
+
+        - name: Install Maven on Red Hat-based systems
+          when: ansible_distribution == 'RedHat'
+          yum:
+            name: maven
+            state: present
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+      changed_when: false
+
+    - name: Verify Maven installation
+      command: mvn -v
+      register: maven_version
+      changed_when: false
+
+    - name: Display Java version
+      debug:
+        msg: "Java version: {{ java_version.stdout_lines }}"
+
+    - name: Display Maven version
+      debug:
+        msg: "Maven version: {{ maven_version.stdout_lines }}"
+...
