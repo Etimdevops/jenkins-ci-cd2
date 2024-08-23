@@ -1,0 +1,99 @@
+---
+- name: Install Java and Maven
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update package repository (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: "*"
+        state: latest
+
+    - name: Install Java 11 (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: java-11-amazon-corretto
+        state: present
+
+    - name: Install Maven (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: maven
+        state: present
+
+    - name: Install OpenJDK 11 on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-11-openjdk
+        state: present
+
+    - name: Install Maven on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: maven
+        state: present
+
+    - name: Update apt cache (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        update_cache: yes
+
+    - name: Install OpenJDK 11 on Ubuntu systems
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Install Maven on Ubuntu systems
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: maven
+        state: present
+
+    - name: Set environment variables for Java and Maven
+      block:
+        - name: Set JAVA_HOME for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export JAVA_HOME=/usr/local/java'
+            create: yes
+
+        - name: Set PATH for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$JAVA_HOME/bin:$PATH'
+            create: yes
+
+        - name: Set M2_HOME for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export M2_HOME=/usr/local/maven'
+            create: yes
+
+        - name: Set PATH for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$M2_HOME/bin:$PATH'
+            create: yes
+
+    - name: Apply environment variables
+      shell: source /etc/profile
+
+    - name: Verify Java installation
+      shell: java -version
+      register: java_version
+      ignore_errors: yes
+
+    - name: Verify Maven installation
+      shell: mvn -v
+      register: maven_version
+      ignore_errors: yes
+
+    - name: Display Java version or error
+      debug:
+        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
+
+    - name: Display Maven version or error
+      debug:
+        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
+...
