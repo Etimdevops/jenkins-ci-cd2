@@ -32,6 +32,9 @@
         gpgcheck: 1
         enabled: yes
 
+    - name: Clean yum cache
+      command: yum clean all
+
     - name: Install Jenkins
       yum:
         name: jenkins
