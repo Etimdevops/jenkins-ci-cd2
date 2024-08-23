@@ -1,6 +1,6 @@
 ---
 - name: Install Jenkins on CentOS
-  hosts: centos
+  hosts: n4
   become: yes
   tasks:
     - name: Ensure EPEL repository is enabled
