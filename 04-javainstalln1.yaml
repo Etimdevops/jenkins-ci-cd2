@@ -17,4 +17,22 @@
       package:
         name: maven
         state: present
+
+    - name: Check Java version
+      command: java -version
+      register: java_version_output
+      ignore_errors: yes
+
+    - name: Display Java version
+      debug:
+        msg: "{{ java_version_output.stderr_lines }}"
+
+    - name: Check Maven version
+      command: mvn -v
+      register: maven_version_output
+      ignore_errors: yes
+
+    - name: Display Maven version
+      debug:
+        msg: "{{ maven_version_output.stdout_lines }}"
 ...
