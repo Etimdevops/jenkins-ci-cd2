@@ -1,0 +1,18 @@
+---
+- name: Install Java on Amazon Linux and Red Hat-based systems
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Java on Amazon Linux or Red Hat-based systems
+      when: ansible_distribution == 'RedHat' or ansible_distribution == 'Amazon'
+      block:
+        - name: Update yum repository
+          yum:
+            name: '*'
+            state: latest
+
+        - name: Install OpenJDK 11
+          yum:
+            name: java-11-openjdk
+            state: present
+...
