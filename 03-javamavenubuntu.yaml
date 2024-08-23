@@ -1,17 +1,17 @@
 ---
-- name: Install Java and Maven on Amazon Linux 2, Red Hat-based, and Ubuntu systems
+- name: Install Java and Maven on Amazon Linux and other systems
   hosts: all
   become: yes
   tasks:
-    - name: Install OpenJDK 11 on Amazon Linux 2
+    - name: Install OpenJDK 8 on Amazon Linux
       when: ansible_distribution == 'Amazon'
       block:
-        - name: Install OpenJDK 11 directly (if amazon-linux-extras is unavailable)
+        - name: Install OpenJDK 1.8.0
           yum:
-            name: java-11-openjdk
+            name: java-1.8.0-openjdk
             state: present
 
-        - name: Install Maven on Amazon Linux 2 from a direct URL
+        - name: Install Maven on Amazon Linux from a direct URL
           get_url:
             url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
             dest: /tmp/apache-maven-3.8.6-bin.tar.gz
