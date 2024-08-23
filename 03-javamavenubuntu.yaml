@@ -89,27 +89,27 @@
             name: maven
             state: present
 
-    - name: Reload shell to apply environment variables
+    - name: Export environment variables and verify Java installation
       shell: |
-        source /etc/profile
-
-    - name: Verify Java installation
-      shell: |
+        export JAVA_HOME=/usr/local/java
+        export PATH=${JAVA_HOME}/bin:${PATH}
         java -version
       register: java_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Export environment variables and verify Maven installation
+      shell: |
+        export M2_HOME=/usr/local/maven
+        export PATH=${M2_HOME}/bin:${PATH}
+        mvn -v
+      register: maven_version
       changed_when: false
       ignore_errors: yes
 
     - name: Display Java version or error
       debug:
         msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
-
-    - name: Verify Maven installation
-      shell: |
-        mvn -v
-      register: maven_version
-      changed_when: false
-      ignore_errors: yes
 
     - name: Display Maven version or error
       debug:
