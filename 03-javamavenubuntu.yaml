@@ -1,6 +1,6 @@
 ---
 - name: Install Java and Maven on Amazon Linux, Red Hat-based, and Ubuntu systems
-  hosts: all
+  hosts: n1
   become: yes
   tasks:
     - name: Install OpenJDK 17 manually on Amazon Linux
