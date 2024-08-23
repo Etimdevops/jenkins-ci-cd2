@@ -6,31 +6,7 @@
     - name: Install OpenJDK 11 on Amazon Linux 2
       when: ansible_distribution == 'Amazon'
       block:
-        - name: Install amazon-linux-extras
-          yum:
-            name: amazon-linux-extras
-            state: present
-
-        - name: Debug amazon-linux-extras command availability
-          command: amazon-linux-extras
-          register: amazon_extras_output
-          changed_when: false
-          ignore_errors: yes
-
-        - name: Debug amazon-linux-extras output
-          debug:
-            msg: "{{ amazon_extras_output.stdout_lines }}"
-
-        - name: Enable OpenJDK 11 repository
-          command: amazon-linux-extras enable java-openjdk11
-          register: enable_java_extras
-          changed_when: "'Already enabled' not in enable_java_extras.stdout"
-
-        - name: Debug OpenJDK 11 repository enabling
-          debug:
-            msg: "{{ enable_java_extras.stdout_lines }}"
-
-        - name: Install OpenJDK 11
+        - name: Install OpenJDK 11 directly (if amazon-linux-extras is unavailable)
           yum:
             name: java-11-openjdk
             state: present
