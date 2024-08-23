@@ -1,62 +1,24 @@
----
-- name: Install Java and Maven on Amazon Linux
+- name: Verify Java and Maven installation
   hosts: n1
   become: yes
   tasks:
-    - name: Download OpenJDK 17 tarball
-      get_url:
-        url: https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
-        dest: /tmp/jdk-17_linux-x64_bin.tar.gz
+    - name: Check Java installation path
+      command: ls -l /usr/local/java/bin/java
+      register: java_path_check
+      ignore_errors: yes
 
-    - name: Extract OpenJDK 17
-      unarchive:
-        src: /tmp/jdk-17_linux-x64_bin.tar.gz
-        dest: /opt/
-        remote_src: yes
+    - name: Check Maven installation path
+      command: ls -l /usr/local/maven/bin/mvn
+      register: maven_path_check
+      ignore_errors: yes
 
-    - name: Create symlink for Java
-      file:
-        src: /opt/jdk-17
-        dest: /usr/local/java
-        state: link
-        force: yes
+    - name: Display Java installation path check
+      debug:
+        msg: "Java installation path: {{ java_path_check.stdout_lines | default('Java not found') }}"
 
-    - name: Download Maven tarball
-      get_url:
-        url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
-
-    - name: Extract Maven archive
-      unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
-        dest: /opt/
-        remote_src: yes
-
-    - name: Create symlink for Maven
-      file:
-        src: /opt/apache-maven-3.8.6
-        dest: /usr/local/maven
-        state: link
-        force: yes
-
-    - name: Create java.sh to set JAVA_HOME
-      copy:
-        dest: /etc/profile.d/java.sh
-        content: |
-          export JAVA_HOME=/usr/local/java
-          export PATH=$JAVA_HOME/bin:$PATH
-        mode: '0644'
-
-    - name: Create maven.sh to set M2_HOME
-      copy:
-        dest: /etc/profile.d/maven.sh
-        content: |
-          export M2_HOME=/usr/local/maven
-          export PATH=$M2_HOME/bin:$PATH
-        mode: '0644'
-
-    - name: Apply environment variables
-      shell: source /etc/profile.d/java.sh && source /etc/profile.d/maven.sh
+    - name: Display Maven installation path check
+      debug:
+        msg: "Maven installation path: {{ maven_path_check.stdout_lines | default('Maven not found') }}"
 
     - name: Verify Java installation
       command: /usr/local/java/bin/java -version
@@ -75,4 +37,3 @@
     - name: Display Maven version or error
       debug:
         msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
-...
