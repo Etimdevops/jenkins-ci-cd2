@@ -4,9 +4,9 @@
   become: yes
   tasks:
     - name: Update package repository
-      amazon.aws.aws_ssm:
-        name: amazon-linux-extras
-        state: present
+      package:
+        name: "*"
+        state: latest
 
     - name: Install Java 11
       package:
