@@ -92,16 +92,9 @@
             name: maven
             state: present
 
-    - name: Source environment variables
-      shell: |
-        source /etc/profile.d/java.sh
-        source /etc/profile.d/maven.sh
-      changed_when: false
-
     - name: Verify Java installation
       shell: |
-        export JAVA_HOME=/usr/local/java
-        export PATH=${JAVA_HOME}/bin:${PATH}
+        . /etc/profile.d/java.sh
         java -version
       register: java_version
       changed_when: false
@@ -113,8 +106,7 @@
 
     - name: Verify Maven installation
       shell: |
-        export M2_HOME=/usr/local/maven
-        export PATH=${M2_HOME}/bin:${PATH}
+        . /etc/profile.d/maven.sh
         mvn -v
       register: maven_version
       changed_when: false
