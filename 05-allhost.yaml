@@ -50,12 +50,13 @@
         name: maven
         state: present
 
-    - name: Set environment variables for Java and Maven
+    - name: Set environment variables for Java and Maven (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
       block:
         - name: Set JAVA_HOME for Java
           lineinfile:
             path: /etc/profile
-            line: 'export JAVA_HOME=/usr/local/java'
+            line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
             create: yes
 
         - name: Set PATH for Java
@@ -67,7 +68,7 @@
         - name: Set M2_HOME for Maven
           lineinfile:
             path: /etc/profile
-            line: 'export M2_HOME=/usr/local/maven'
+            line: 'export M2_HOME=/usr/share/maven'
             create: yes
 
         - name: Set PATH for Maven
@@ -76,24 +77,64 @@
             line: 'export PATH=$M2_HOME/bin:$PATH'
             create: yes
 
-    - name: Apply environment variables
-      shell: source /etc/profile
-
-    - name: Verify Java installation
-      shell: java -version
-      register: java_version
+    - name: Reload environment variables and verify installations (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      shell: |
+        bash -c "source /etc/profile && java -version && mvn -v"
+      register: environment_vars
       ignore_errors: yes
 
-    - name: Verify Maven installation
-      shell: mvn -v
-      register: maven_version
+    - name: Display Java version or error (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      debug:
+        msg: "{{ environment_vars.stdout_lines | default('Java installation failed.') }}"
+
+    - name: Display Maven version or error (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      debug:
+        msg: "{{ environment_vars.stdout_lines | default('Maven installation failed.') }}"
+
+    - name: Set environment variables for Java and Maven (RedHat and Amazon Linux)
+      when: ansible_distribution in ['RedHat', 'Amazon']
+      block:
+        - name: Set JAVA_HOME for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+            create: yes
+
+        - name: Set PATH for Java
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$JAVA_HOME/bin:$PATH'
+            create: yes
+
+        - name: Set M2_HOME for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export M2_HOME=/usr/share/maven'
+            create: yes
+
+        - name: Set PATH for Maven
+          lineinfile:
+            path: /etc/profile
+            line: 'export PATH=$M2_HOME/bin:$PATH'
+            create: yes
+
+    - name: Reload environment variables and verify installations (RedHat and Amazon Linux)
+      when: ansible_distribution in ['RedHat', 'Amazon']
+      shell: |
+        bash -c "source /etc/profile && java -version && mvn -v"
+      register: environment_vars
       ignore_errors: yes
 
-    - name: Display Java version or error
+    - name: Display Java version or error (RedHat and Amazon Linux)
+      when: ansible_distribution in ['RedHat', 'Amazon']
       debug:
-        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
+        msg: "{{ environment_vars.stdout_lines | default('Java installation failed.') }}"
 
-    - name: Display Maven version or error
+    - name: Display Maven version or error (RedHat and Amazon Linux)
+      when: ansible_distribution in ['RedHat', 'Amazon']
       debug:
-        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
+        msg: "{{ environment_vars.stdout_lines | default('Maven installation failed.') }}"
 ...
