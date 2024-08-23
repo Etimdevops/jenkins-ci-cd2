@@ -26,17 +26,14 @@
 
         - name: Set Java environment variables
           lineinfile:
-            path: /etc/profile.d/java.sh
+            path: /etc/profile
             line: |
               export JAVA_HOME=/usr/local/java
               export PATH=${JAVA_HOME}/bin:${PATH}
             create: yes
             state: present
 
-    - name: Install Maven on Amazon Linux from a direct URL
-      when: ansible_distribution == 'Amazon'
-      block:
-        - name: Download Maven
+        - name: Install Maven on Amazon Linux from a direct URL
           get_url:
             url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
             dest: /tmp/apache-maven-3.8.6-bin.tar.gz
@@ -56,7 +53,7 @@
 
         - name: Set Maven environment variables
           lineinfile:
-            path: /etc/profile.d/maven.sh
+            path: /etc/profile
             line: |
               export M2_HOME=/usr/local/maven
               export PATH=${M2_HOME}/bin:${PATH}
@@ -92,9 +89,12 @@
             name: maven
             state: present
 
+    - name: Reload shell to apply environment variables
+      shell: |
+        source /etc/profile
+
     - name: Verify Java installation
       shell: |
-        . /etc/profile.d/java.sh
         java -version
       register: java_version
       changed_when: false
@@ -106,7 +106,6 @@
 
     - name: Verify Maven installation
       shell: |
-        . /etc/profile.d/maven.sh
         mvn -v
       register: maven_version
       changed_when: false
