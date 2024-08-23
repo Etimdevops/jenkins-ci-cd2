@@ -1,0 +1,112 @@
+---
+- name: Install Java and Maven on Amazon Linux 2, Red Hat-based, and Ubuntu systems
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install OpenJDK 11 on Amazon Linux 2
+      when: ansible_distribution == 'Amazon'
+      block:
+        - name: Install amazon-linux-extras
+          yum:
+            name: amazon-linux-extras
+            state: present
+
+        - name: Debug amazon-linux-extras command availability
+          command: amazon-linux-extras
+          register: amazon_extras_output
+          changed_when: false
+          ignore_errors: yes
+
+        - name: Debug amazon-linux-extras output
+          debug:
+            msg: "{{ amazon_extras_output.stdout_lines }}"
+
+        - name: Enable OpenJDK 11 repository
+          command: amazon-linux-extras enable java-openjdk11
+          register: enable_java_extras
+          changed_when: "'Already enabled' not in enable_java_extras.stdout"
+
+        - name: Debug OpenJDK 11 repository enabling
+          debug:
+            msg: "{{ enable_java_extras.stdout_lines }}"
+
+        - name: Install OpenJDK 11
+          yum:
+            name: java-11-openjdk
+            state: present
+
+        - name: Install Maven on Amazon Linux 2 from a direct URL
+          get_url:
+            url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+            dest: /tmp/apache-maven-3.8.6-bin.tar.gz
+
+        - name: Extract Maven archive
+          unarchive:
+            src: /tmp/apache-maven-3.8.6-bin.tar.gz
+            dest: /opt/
+            remote_src: yes
+
+        - name: Create symlink for Maven
+          file:
+            src: /opt/apache-maven-3.8.6
+            dest: /usr/local/maven
+            state: link
+
+        - name: Set Maven environment variables
+          lineinfile:
+            path: /etc/profile.d/maven.sh
+            line: |
+              export M2_HOME=/usr/local/maven
+              export PATH=${M2_HOME}/bin:${PATH}
+            create: yes
+            state: present
+
+    - name: Install OpenJDK 11 on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-11-openjdk
+        state: present
+
+    - name: Install Maven on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: maven
+        state: present
+
+    - name: Install OpenJDK 11 on Ubuntu systems
+      when: ansible_distribution == 'Ubuntu'
+      block:
+        - name: Update apt cache
+          apt:
+            update_cache: yes
+
+        - name: Install OpenJDK 11
+          apt:
+            name: openjdk-11-jdk
+            state: present
+
+        - name: Install Maven
+          apt:
+            name: maven
+            state: present
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Java version or error
+      debug:
+        msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
+
+    - name: Verify Maven installation
+      command: mvn -v
+      register: maven_version
+      changed_when: false
+      ignore_errors: yes
+
+    - name: Display Maven version or error
+      debug:
+        msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
+...
