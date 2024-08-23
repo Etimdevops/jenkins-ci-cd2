@@ -1,6 +1,6 @@
 ---
 - name: Install Java and Maven on Amazon Linux, Red Hat-based, and Ubuntu systems
-  hosts: all
+  hosts: n1
   become: yes
   tasks:
     - name: Install OpenJDK 11 manually on Amazon Linux
@@ -8,18 +8,18 @@
       block:
         - name: Download OpenJDK 11 tarball
           get_url:
-            url: https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.2_linux-x64_bin.tar.gz
-            dest: /tmp/openjdk-11.0.2_linux-x64_bin.tar.gz
+            url: https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.tar.gz
+            dest: /tmp/jdk-17_linux-x64_bin.tar.gz
 
         - name: Extract OpenJDK 11
           unarchive:
-            src: /tmp/openjdk-11.0.2_linux-x64_bin.tar.gz
+            src: /tmp/jdk-17_linux-x64_bin.tar.gz
             dest: /opt/
             remote_src: yes
 
         - name: Create symlink for Java
           file:
-            src: /opt/jdk-11.0.2
+            src: /opt/jdk-17
             dest: /usr/local/java
             state: link
 
