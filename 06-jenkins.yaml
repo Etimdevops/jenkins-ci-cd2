@@ -1,6 +1,6 @@
 ---
 - name: Install Jenkins on CentOS
-  hosts: n4
+  hosts: centos
   become: yes
   tasks:
     - name: Ensure EPEL repository is enabled
@@ -13,17 +13,17 @@
         name: java-1.8.0-openjdk
         state: present
 
-    - name: Add Jenkins repository
-      get_url:
-        url: https://pkg.jenkins.io/redhat/jenkins.io.key
-        dest: /etc/pki/rpm-gpg/jenkins.io.key
+    - name: Import Jenkins GPG key
+      rpm_key:
+        key: https://pkg.jenkins.io/redhat/jenkins.io.key
+        state: present
 
     - name: Add Jenkins repository configuration
       yum_repository:
         name: jenkins
         description: Jenkins-stable repo
         baseurl: https://pkg.jenkins.io/redhat-stable/
-        gpgkey: file:///etc/pki/rpm-gpg/jenkins.io.key
+        gpgkey: https://pkg.jenkins.io/redhat/jenkins.io.key
         enabled: yes
 
     - name: Install Jenkins
