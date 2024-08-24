@@ -1,5 +1,5 @@
 ---
-- name: Install Java 8 and Maven 3.8.6 on Amazon Linux 2023
+- name: Install Java 8 on Amazon Linux 2023
   hosts: all
   become: yes
   tasks:
@@ -22,36 +22,6 @@
         name: java-1.8.0-amazon-corretto
         state: present
 
-    - name: Install wget
-      yum:
-        name: wget
-        state: present
-
-    - name: Download Maven 3.8.6
-      get_url:
-        url: https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
-
-    - name: Extract Maven
-      unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
-        dest: /opt/
-        remote_src: yes
-
-    - name: Create a symbolic link for Maven
-      file:
-        src: /opt/apache-maven-3.8.6
-        dest: /opt/maven
-        state: link
-
-    - name: Set MAVEN_HOME environment variable
-      lineinfile:
-        path: ~/.bash_profile
-        line: 'export MAVEN_HOME=/opt/maven'
-        create: yes
-        state: present
-      become: no
-
     - name: Set JAVA_HOME environment variable
       lineinfile:
         path: ~/.bash_profile
@@ -60,26 +30,8 @@
         state: present
       become: no
 
-    - name: Source bash_profile to apply JAVA_HOME and MAVEN_HOME
+    - name: Source bash_profile to apply JAVA_HOME
       shell: source ~/.bash_profile
       become: no
       when: ansible_env.SHELL == '/bin/bash'
-
-    - name: Verify Java version
-      command: java -version
-      register: java_version
-      changed_when: false
-
-    - name: Display Java version
-      debug:
-        msg: "{{ java_version.stdout }}"
-
-    - name: Verify Maven version
-      command: mvn -v
-      register: maven_version
-      changed_when: false
-
-    - name: Display Maven version
-      debug:
-        msg: "{{ maven_version.stdout }}"
 ...
