@@ -10,7 +10,7 @@
         state: present
 
     - name: Discover the correct Java 11 path
-      command: alternatives --display java
+      command: alternatives --display java | grep 'priority' | awk '{print $1}'
       register: java_alternatives
 
     - name: Set Java 11 as the default version
@@ -20,7 +20,7 @@
         path: "{{ item }}"
         priority: 1
       loop: "{{ java_alternatives.stdout_lines }}"
-      when: '"java-11-amazon-corretto" in item'
+      when: item == "/usr/lib/jvm/java-11-amazon-corretto.x86_64/bin/java"
 
     - name: Verify Java installation
       command: java -version
