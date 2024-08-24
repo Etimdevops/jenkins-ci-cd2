@@ -1,6 +1,6 @@
 ---
 - name: Install Java and Maven
-  hosts: n4
+  hosts: g1
   become: yes
   tasks:
     - name: Update package repository (Amazon Linux 2)
