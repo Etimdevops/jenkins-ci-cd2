@@ -5,7 +5,7 @@ pipeline {
         stage('Build') {
             steps {
                 // Clean and build the project using the specified Maven path
-                sh '/usr/bin/mvn clean package'
+                sh '/usr/local/maven/bin/mvn clean package'
             }
         }
         
