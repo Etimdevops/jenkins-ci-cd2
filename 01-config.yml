@@ -1,22 +1,24 @@
 ---
-- name: Install Maven 3.8.6 on Amazon Linux 2023
+- name: Install Maven 3.6.3 on Amazon Linux 2023
   hosts: all
   become: yes
   tasks:
-    - name: Download Maven 3.8.6
-      get_url:
-        url: https://downloads.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
+    - name: Download Maven 3.6.3 using wget
+      command: >
+        wget -O /tmp/apache-maven-3.6.3-bin.tar.gz
+        https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+      args:
+        creates: /tmp/apache-maven-3.6.3-bin.tar.gz
 
     - name: Extract Maven
       unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
+        src: /tmp/apache-maven-3.6.3-bin.tar.gz
         dest: /opt/
         remote_src: yes
 
     - name: Create a symlink for Maven
       file:
-        src: /opt/apache-maven-3.8.6
+        src: /opt/apache-maven-3.6.3
         dest: /opt/maven
         state: link
 

@@ -1,45 +1,59 @@
 ---
-- name: Install Maven 3.6.3 on Amazon Linux 2023
+- name: Install Java 8 and Maven 3.3.8
   hosts: all
   become: yes
   tasks:
-    - name: Download Maven 3.6.3 using wget
-      command: >
-        wget -O /tmp/apache-maven-3.6.3-bin.tar.gz
-        https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
-      args:
-        creates: /tmp/apache-maven-3.6.3-bin.tar.gz
+    - name: Remove existing Java (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: java-11-amazon-corretto
+        state: absent
 
-    - name: Extract Maven
-      unarchive:
-        src: /tmp/apache-maven-3.6.3-bin.tar.gz
-        dest: /opt/
-        remote_src: yes
+    - name: Remove existing Maven (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: maven
+        state: absent
 
-    - name: Create a symlink for Maven
-      file:
-        src: /opt/apache-maven-3.6.3
-        dest: /opt/maven
-        state: link
+    - name: Remove existing Java (Red Hat-based systems)
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-11-openjdk
+        state: absent
 
-    - name: Set MAVEN_HOME environment variable
-      lineinfile:
-        path: ~/.bash_profile
-        line: 'export MAVEN_HOME=/opt/maven'
-        create: yes
+    - name: Remove existing Maven (Red Hat-based systems)
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: maven
+        state: absent
+
+    - name: Remove existing Java (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: openjdk-11-jdk
+        state: absent
+
+    - name: Remove existing Maven (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: maven
+        state: absent
+
+    - name: Install Java 8 (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: java-1.8.0-amazon-corretto
         state: present
-      become: no
 
-    - name: Add Maven to PATH
-      lineinfile:
-        path: ~/.bash_profile
-        line: 'export PATH=$MAVEN_HOME/bin:$PATH'
-        create: yes
+    - name: Install Java 8 (Red Hat-based systems)
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-1.8.0-openjdk
         state: present
-      become: no
 
-    - name: Source bash_profile to apply MAVEN_HOME and PATH
-      shell: source ~/.bash_profile
-      become: no
-      when: ansible_env.SHELL == '/bin/bash'
+    - name: Install Java 8 (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: openjdk-8-jdk
+        state: present
 ...
