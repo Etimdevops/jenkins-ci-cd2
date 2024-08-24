@@ -1,36 +1,14 @@
 ---
-- name: Ensure Maven is installed and configured
+- name: Find Maven path
   hosts: g2
-  become: yes
   tasks:
-    - name: Check if Maven is installed
-      command: mvn -v
-      register: maven_installed
+    - name: Find Maven executable
+      command: which mvn
+      register: mvn_path
       ignore_errors: yes
 
-    - name: Display Maven check result
+    - name: Display Maven path
       debug:
-        msg: "Maven check result: {{ maven_installed }}"
-      when: maven_installed.failed
-
-    - name: Install Maven on CentOS/RHEL
-      yum:
-        name: maven
-        state: present
-      when: maven_installed.failed
-
-    - name: Verify Maven installation
-      command: mvn -v
-      register: maven_version
-      changed_when: false
-
-    - name: Display Maven version
-      debug:
-        msg: "Maven installed: {{ maven_version.stdout }}"
-      when: maven_version.rc == 0
-      
-    - name: Debug Maven installation errors
-      debug:
-        msg: "Maven installation failed or not found. Output: {{ maven_version.stderr }}"
-      when: maven_version.rc != 0
+        msg: "Maven is located at: {{ mvn_path.stdout }}"
+      when: mvn_path.stdout is defined and mvn_path.stdout != ""
 ...
