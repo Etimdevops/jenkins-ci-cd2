@@ -5,41 +5,45 @@
   tasks:
     - name: Check Java installation path (Amazon Linux 2, RedHat, CentOS)
       shell: |
-        if [ -d /usr/lib/jvm/java-11-openjdk-amd64 ]; then
-          echo "/usr/lib/jvm/java-11-openjdk-amd64"
-        else
-          echo "Java installation path not found."
-        fi
+        for dir in /usr/lib/jvm /usr/java /opt/java; do
+          if [ -d "$dir/java-11-openjdk-amd64" ]; then
+            echo "$dir/java-11-openjdk-amd64"
+          fi
+        done
+        echo "Java installation path not found."
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
       register: java_paths
 
     - name: Check Java installation path (Ubuntu)
       shell: |
-        if [ -d /usr/lib/jvm/java-11-openjdk-amd64 ]; then
-          echo "/usr/lib/jvm/java-11-openjdk-amd64"
-        else
-          echo "Java installation path not found."
-        fi
+        for dir in /usr/lib/jvm /usr/java /opt/java; do
+          if [ -d "$dir/java-11-openjdk-amd64" ]; then
+            echo "$dir/java-11-openjdk-amd64"
+          fi
+        done
+        echo "Java installation path not found."
       when: ansible_distribution == 'Ubuntu'
       register: java_paths
 
     - name: Check Maven installation path (Amazon Linux 2, RedHat, CentOS)
       shell: |
-        if [ -d /usr/share/maven ]; then
-          echo "/usr/share/maven"
-        else
-          echo "Maven installation path not found."
-        fi
+        for dir in /usr/share/maven /opt/maven; do
+          if [ -d "$dir" ]; then
+            echo "$dir"
+          fi
+        done
+        echo "Maven installation path not found."
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
       register: maven_paths
 
     - name: Check Maven installation path (Ubuntu)
       shell: |
-        if [ -d /usr/share/maven ]; then
-          echo "/usr/share/maven"
-        else
-          echo "Maven installation path not found."
-        fi
+        for dir in /usr/share/maven /opt/maven; do
+          if [ -d "$dir" ]; then
+            echo "$dir"
+          fi
+        done
+        echo "Maven installation path not found."
       when: ansible_distribution == 'Ubuntu'
       register: maven_paths
 
