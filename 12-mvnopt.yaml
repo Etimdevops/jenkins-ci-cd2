@@ -1,12 +1,17 @@
 ---
 - name: Ensure Maven is installed and configured
-  hosts: all
+  hosts: g2
   become: yes
   tasks:
     - name: Check if Maven is installed
       command: mvn -v
       register: maven_installed
       ignore_errors: yes
+
+    - name: Display Maven check result
+      debug:
+        msg: "Maven check result: {{ maven_installed }}"
+      when: maven_installed.failed
 
     - name: Install Maven on CentOS/RHEL
       yum:
@@ -22,5 +27,10 @@
     - name: Display Maven version
       debug:
         msg: "Maven installed: {{ maven_version.stdout }}"
-      when: maven_installed.failed
+      when: maven_version.rc == 0
+      
+    - name: Debug Maven installation errors
+      debug:
+        msg: "Maven installation failed or not found. Output: {{ maven_version.stderr }}"
+      when: maven_version.rc != 0
 ...
