@@ -1,5 +1,5 @@
 ---
-- name: Find Maven path
+- name: Find Maven and Java paths
   hosts: g2
   tasks:
     - name: Find Maven executable
@@ -11,4 +11,14 @@
       debug:
         msg: "Maven is located at: {{ mvn_path.stdout }}"
       when: mvn_path.stdout is defined and mvn_path.stdout != ""
+
+    - name: Find Java executable
+      command: which java
+      register: java_path
+      ignore_errors: yes
+
+    - name: Display Java path
+      debug:
+        msg: "Java is located at: {{ java_path.stdout }}"
+      when: java_path.stdout is defined and java_path.stdout != ""
 ...
