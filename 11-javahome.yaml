@@ -1,0 +1,26 @@
+---
+- name: Determine JAVA_HOME
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if Java is installed
+      command: which java
+      register: java_location
+      ignore_errors: yes
+
+    - name: Find JAVA_HOME (if Java is installed)
+      when: java_location.stdout != ""
+      command: |
+        java -XshowSettings:properties -version 2>&1 | grep 'java.home' | awk -F ' = ' '{print $2}'
+      register: java_home
+      ignore_errors: yes
+
+    - name: Set default JAVA_HOME not found message
+      when: java_location.stdout == ""
+      set_fact:
+        java_home: "JAVA_HOME not set or Java not installed."
+
+    - name: Display JAVA_HOME
+      debug:
+        msg: "JAVA_HOME: {{ java_home.stdout | default('JAVA_HOME not set or Java not installed.') }}"
+...
