@@ -16,21 +16,16 @@
         echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bash_profile
         source ~/.bash_profile
 
-    - name: Verify Java version
-      command: java -version
-      register: java_version
+    - name: Verify Java version and Display JAVA_HOME
+      shell: |
+        java_version=$(java -version 2>&1)
+        echo "Java Version: $java_version"
+        echo "JAVA_HOME: $JAVA_HOME"
+      register: result
       changed_when: false
 
-    - name: Show Java version
+    - name: Show Java version and JAVA_HOME
       debug:
-        msg: "{{ java_version.stderr_lines | join('') }}"
-
-    - name: Display JAVA_HOME path
-      shell: echo $JAVA_HOME
-      register: java_home_path
-      changed_when: false
-
-    - name: Show JAVA_HOME path
-      debug:
-        msg: "JAVA_HOME is set to: {{ java_home_path.stdout }}"
+        msg: |
+          {{ result.stdout_lines | join('\n') }}
 ...
