@@ -123,5 +123,4 @@
     - name: Display Maven version or error
       debug:
         msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
-
 ...
