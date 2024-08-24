@@ -1,42 +1,36 @@
 ---
-- name: Install Java 8 on Amazon Linux 2023
+- name: Install Java 8 and verify version on Amazon Linux 2023
   hosts: n1
   become: yes
   tasks:
-    - name: Update package index
-      yum:
-        name: '*'
-        state: latest
-
-    - name: Install Amazon Corretto 8 JDK and wget
+    - name: Install Java 8 and wget
       yum:
         name:
           - java-1.8.0-amazon-corretto
           - wget
         state: present
 
-    - name: Set JAVA_HOME and PATH environment variables
-      lineinfile:
-        path: ~/.bash_profile
-        line: |
-          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
-          export PATH=$JAVA_HOME/bin:$PATH
-        create: yes
-        state: present
-      become: no
-
-    - name: Source bash_profile to apply JAVA_HOME and PATH
-      shell: source ~/.bash_profile
-      become: no
-      when: ansible_env.SHELL == '/bin/bash'
+    - name: Set JAVA_HOME and PATH
+      shell: |
+        echo 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto' >> ~/.bash_profile
+        echo 'export PATH=$JAVA_HOME/bin:$PATH' >> ~/.bash_profile
+        source ~/.bash_profile
 
     - name: Verify Java version
       command: java -version
       register: java_version
       changed_when: false
-      failed_when: false
 
-    - name: Display Java version
+    - name: Show Java version
       debug:
         msg: "{{ java_version.stderr_lines | join('') }}"
+
+    - name: Display JAVA_HOME path
+      shell: echo $JAVA_HOME
+      register: java_home_path
+      changed_when: false
+
+    - name: Show JAVA_HOME path
+      debug:
+        msg: "JAVA_HOME is set to: {{ java_home_path.stdout }}"
 ...
