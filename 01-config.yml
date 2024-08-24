@@ -1,36 +1,42 @@
 ---
-- name: Install Java 8 on Amazon Linux 2023
+- name: Install Maven 3.8.6 on Amazon Linux 2023
   hosts: all
   become: yes
   tasks:
-    - name: Update package index
-      yum:
-        name: '*'
-        state: latest
+    - name: Download Maven 3.8.6
+      get_url:
+        url: https://downloads.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
 
-    - name: Install Amazon Corretto 8 repository
-      yum_repository:
-        name: amazon-corretto
-        description: Amazon Corretto 8
-        baseurl: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
-        gpgcheck: yes
-        gpgkey: https://www.amazon.com/amazon-corretto-key.asc
-        enabled: yes
+    - name: Extract Maven
+      unarchive:
+        src: /tmp/apache-maven-3.8.6-bin.tar.gz
+        dest: /opt/
+        remote_src: yes
 
-    - name: Install Amazon Corretto 8 JDK
-      yum:
-        name: java-1.8.0-amazon-corretto
-        state: present
+    - name: Create a symlink for Maven
+      file:
+        src: /opt/apache-maven-3.8.6
+        dest: /opt/maven
+        state: link
 
-    - name: Set JAVA_HOME environment variable
+    - name: Set MAVEN_HOME environment variable
       lineinfile:
         path: ~/.bash_profile
-        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto'
+        line: 'export MAVEN_HOME=/opt/maven'
         create: yes
         state: present
       become: no
 
-    - name: Source bash_profile to apply JAVA_HOME
+    - name: Add Maven to PATH
+      lineinfile:
+        path: ~/.bash_profile
+        line: 'export PATH=$MAVEN_HOME/bin:$PATH'
+        create: yes
+        state: present
+      become: no
+
+    - name: Source bash_profile to apply MAVEN_HOME and PATH
       shell: source ~/.bash_profile
       become: no
       when: ansible_env.SHELL == '/bin/bash'
