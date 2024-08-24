@@ -8,10 +8,27 @@
         name: '*'
         state: latest
 
-    - name: Install Java 11
+    - name: Install Git
       yum:
-        name: java-11-openjdk
+        name: git
         state: present
+
+    - name: Download and install Java 11
+      get_url:
+        url: https://download.java.net/java/GA/jdk11/9/GPL/openjdk-11_linux-x64_bin.tar.gz
+        dest: /tmp/openjdk-11_linux-x64_bin.tar.gz
+
+    - name: Extract Java 11
+      unarchive:
+        src: /tmp/openjdk-11_linux-x64_bin.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Create a symlink for Java 11
+      file:
+        src: /opt/jdk-11
+        dest: /usr/lib/jvm/java-11-openjdk
+        state: link
 
     - name: Set JAVA_HOME environment variable
       lineinfile:
@@ -21,11 +38,6 @@
 
     - name: Source the JAVA_HOME environment variable
       shell: source /etc/profile.d/java.sh
-
-    - name: Install Git
-      yum:
-        name: git
-        state: present
 
     - name: Download Maven 3.8.6
       get_url:
