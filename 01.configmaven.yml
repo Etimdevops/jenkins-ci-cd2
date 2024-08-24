@@ -3,10 +3,32 @@
   hosts: all
   become: yes
   tasks:
-    - name: Install Maven from the package manager
-      yum:
-        name: maven
-        state: present
+    - name: Download Maven 3.8.8
+      get_url:
+        url: https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+        dest: /tmp/apache-maven-3.8.8-bin.tar.gz
+
+    - name: Extract Maven
+      unarchive:
+        src: /tmp/apache-maven-3.8.8-bin.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Set up environment variables for Maven
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: 'export M2_HOME=/opt/apache-maven-3.8.8'
+        create: yes
+
+    - name: Update PATH in environment variables
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: 'export PATH=$M2_HOME/bin:$PATH'
+        create: yes
+
+    - name: Source maven.sh to update the current environment
+      command: source /etc/profile.d/maven.sh
+      become: no
 
     - name: Check Maven version
       command: mvn -v
