@@ -1,8 +1,6 @@
-merge with this 
-
 ---
 - name: Install Java 8 on Amazon Linux 2023
-  hosts: all
+  hosts: n1
   become: yes
   tasks:
     - name: Update package index
