@@ -1,7 +1,5 @@
 pipeline {
-    agent {
-        label 'Built-In Node' // Use default node
-    }
+    agent any
 
     stages {
         stage('Build') {
