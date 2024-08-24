@@ -3,35 +3,51 @@
   hosts: all
   become: yes
   tasks:
-    - name: Find Java installation path (Amazon Linux 2, RedHat, CentOS)
-      command: |
-        find /usr/lib/jvm -name '*java*' -type d
+    - name: Check Java installation path (Amazon Linux 2, RedHat, CentOS)
+      shell: |
+        if [ -d /usr/lib/jvm/java-11-openjdk-amd64 ]; then
+          echo "/usr/lib/jvm/java-11-openjdk-amd64"
+        else
+          echo "Java installation path not found."
+        fi
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
       register: java_paths
 
-    - name: Find Java installation path (Ubuntu)
-      command: |
-        find /usr/lib/jvm -name '*java*' -type d
+    - name: Check Java installation path (Ubuntu)
+      shell: |
+        if [ -d /usr/lib/jvm/java-11-openjdk-amd64 ]; then
+          echo "/usr/lib/jvm/java-11-openjdk-amd64"
+        else
+          echo "Java installation path not found."
+        fi
       when: ansible_distribution == 'Ubuntu'
       register: java_paths
 
-    - name: Find Maven installation path (Amazon Linux 2, RedHat, CentOS)
-      command: |
-        find /usr/share/maven -type d
+    - name: Check Maven installation path (Amazon Linux 2, RedHat, CentOS)
+      shell: |
+        if [ -d /usr/share/maven ]; then
+          echo "/usr/share/maven"
+        else
+          echo "Maven installation path not found."
+        fi
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
       register: maven_paths
 
-    - name: Find Maven installation path (Ubuntu)
-      command: |
-        find /usr/share/maven -type d
+    - name: Check Maven installation path (Ubuntu)
+      shell: |
+        if [ -d /usr/share/maven ]; then
+          echo "/usr/share/maven"
+        else
+          echo "Maven installation path not found."
+        fi
       when: ansible_distribution == 'Ubuntu'
       register: maven_paths
 
     - name: Display Java installation paths
       debug:
-        msg: "Java installation paths: {{ java_paths.stdout_lines | default(['Java installation paths not found.']) }}"
+        msg: "Java installation paths: {{ java_paths.stdout_lines | default(['Java installation path not found.']) }}"
 
     - name: Display Maven installation paths
       debug:
-        msg: "Maven installation paths: {{ maven_paths.stdout_lines | default(['Maven installation paths not found.']) }}"
+        msg: "Maven installation paths: {{ maven_paths.stdout_lines | default(['Maven installation path not found.']) }}"
 ...
