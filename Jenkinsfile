@@ -2,8 +2,8 @@ pipeline {
     agent any
     
     environment {
-        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk'  // Example path, adjust according to your setup
-        MAVEN_HOME = '/usr/share/maven'              // Example path, adjust according to your setup
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-2.el7_9.x86_64'
+        MAVEN_HOME = '/usr/share/maven'  // Update this path if your Maven installation is in a different location
     }
     
     stages {
