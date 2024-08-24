@@ -1,0 +1,85 @@
+---
+- name: Install Java 8, Maven 3.8.6, and Git
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update all packages
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Java 8
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+
+    - name: Set JAVA_HOME environment variable
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk'
+        create: yes
+
+    - name: Source the JAVA_HOME environment variable
+      shell: source /etc/profile.d/java.sh
+
+    - name: Install Git
+      yum:
+        name: git
+        state: present
+
+    - name: Download Maven 3.8.6
+      get_url:
+        url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
+        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
+
+    - name: Extract Maven
+      unarchive:
+        src: /tmp/apache-maven-3.8.6-bin.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Create a symlink for Maven
+      file:
+        src: /opt/apache-maven-3.8.6
+        dest: /opt/maven
+        state: link
+
+    - name: Set MAVEN_HOME environment variable
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: 'export MAVEN_HOME=/opt/maven'
+        create: yes
+
+    - name: Add Maven to PATH
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: 'export PATH=$PATH:$MAVEN_HOME/bin'
+        create: yes
+
+    - name: Source the MAVEN_HOME environment variable
+      shell: source /etc/profile.d/maven.sh
+
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+
+    - name: Verify Maven installation
+      command: mvn -version
+      register: maven_version
+
+    - name: Verify Git installation
+      command: git --version
+      register: git_version
+
+    - name: Display Java version
+      debug:
+        msg: "Java version: {{ java_version.stdout }}"
+
+    - name: Display Maven version
+      debug:
+        msg: "Maven version: {{ maven_version.stdout }}"
+
+    - name: Display Git version
+      debug:
+        msg: "Git version: {{ git_version.stdout }}"
+...
