@@ -24,6 +24,9 @@
 
     - name: Check Maven version
       command: mvn -v
+      environment:
+        M2_HOME: "/opt/apache-maven-3.8.8"
+        PATH: "/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
       register: mvn_version
       changed_when: false
 
