@@ -4,8 +4,8 @@
   become: yes
   tasks:
     - name: Install OpenJDK
-      amazon_linux_extras:
-        name: java-openjdk11
+      package:
+        name: java-1.8.0-openjdk
         state: present
 
     - name: Find Java installation path
@@ -22,13 +22,10 @@
         owner: root
         group: root
 
-    - name: Ensure profile.d scripts are sourced
-      command: source /etc/profile.d/java.sh
-      environment:
-        JAVA_HOME: "{{ java_path.stdout | dirname | dirname }}"
-
-    - name: Verify JAVA_HOME
-      command: echo $JAVA_HOME
+    - name: Ensure JAVA_HOME is set for the current session
+      shell: |
+        source /etc/profile.d/java.sh
+        echo $JAVA_HOME
       register: java_home_check
 
     - name: Print JAVA_HOME value
