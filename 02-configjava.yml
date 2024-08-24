@@ -3,10 +3,12 @@
   hosts: all
   become: yes
   tasks:
-    - name: Download Maven 3.6.3
-      get_url:
-        url: https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
-        dest: /tmp/apache-maven-3.6.3-bin.tar.gz
+    - name: Download Maven 3.6.3 using wget
+      command: >
+        wget -O /tmp/apache-maven-3.6.3-bin.tar.gz
+        https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz
+      args:
+        creates: /tmp/apache-maven-3.6.3-bin.tar.gz
 
     - name: Extract Maven
       unarchive:
