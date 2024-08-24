@@ -8,15 +8,25 @@
         name: '*'
         state: latest
 
-    - name: Install Java 8
+    - name: Install wget
       yum:
-        name: java-1.8.0-openjdk-devel
+        name: wget
+        state: present
+
+    - name: Download OpenJDK 8 RPM
+      get_url:
+        url: https://download.java.net/java/GA/jdk8/8u362-b09/9f80c16efb764d5ea02a3d4a5ecdd92a/ojdkbuild-jdk-8u362-b09-linux-x64-bin.rpm
+        dest: /tmp/ojdkbuild-jdk-8u362-b09-linux-x64-bin.rpm
+
+    - name: Install OpenJDK 8 RPM
+      yum:
+        name: /tmp/ojdkbuild-jdk-8u362-b09-linux-x64-bin.rpm
         state: present
 
     - name: Set JAVA_HOME environment variable
       lineinfile:
         path: ~/.bash_profile
-        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk'
+        line: 'export JAVA_HOME=/usr/java/jdk1.8.0_362'
         create: yes
         state: present
       become: no
