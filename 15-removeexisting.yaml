@@ -1,54 +1,78 @@
 ---
-- name: Install Java and Maven
+- name: Install Java 8 and Maven 3.3.8
   hosts: all
   become: yes
   tasks:
-    - name: Update package repository (Amazon Linux 2)
-      when: ansible_distribution == 'Amazon'
-      package:
-        name: "*"
-        state: latest
-
-    - name: Install Java 11 (Amazon Linux 2)
+    - name: Remove existing Java (Amazon Linux 2)
       when: ansible_distribution == 'Amazon'
       package:
         name: java-11-amazon-corretto
-        state: present
+        state: absent
 
-    - name: Install Maven (Amazon Linux 2)
+    - name: Remove existing Maven (Amazon Linux 2)
       when: ansible_distribution == 'Amazon'
       package:
         name: maven
-        state: present
+        state: absent
 
-    - name: Install OpenJDK 11 on Red Hat-based systems
+    - name: Remove existing Java (Red Hat-based systems)
       when: ansible_distribution == 'RedHat'
       yum:
         name: java-11-openjdk
-        state: present
+        state: absent
 
-    - name: Install Maven on Red Hat-based systems
+    - name: Remove existing Maven (Red Hat-based systems)
       when: ansible_distribution == 'RedHat'
       yum:
         name: maven
-        state: present
+        state: absent
 
-    - name: Update apt cache (Ubuntu)
-      when: ansible_distribution == 'Ubuntu'
-      apt:
-        update_cache: yes
-
-    - name: Install OpenJDK 11 on Ubuntu systems
+    - name: Remove existing Java (Ubuntu)
       when: ansible_distribution == 'Ubuntu'
       apt:
         name: openjdk-11-jdk
-        state: present
+        state: absent
 
-    - name: Install Maven on Ubuntu systems
+    - name: Remove existing Maven (Ubuntu)
       when: ansible_distribution == 'Ubuntu'
       apt:
         name: maven
+        state: absent
+
+    - name: Install Java 8 (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: java-1.8.0-amazon-corretto
         state: present
+
+    - name: Install Java 8 (Red Hat-based systems)
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+
+    - name: Install Java 8 (Ubuntu)
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: openjdk-8-jdk
+        state: present
+
+    - name: Download Maven 3.3.8
+      get_url:
+        url: https://archive.apache.org/dist/maven/maven-3/3.3.8/binaries/apache-maven-3.3.8-bin.tar.gz
+        dest: /tmp/apache-maven-3.3.8-bin.tar.gz
+
+    - name: Extract Maven 3.3.8
+      unarchive:
+        src: /tmp/apache-maven-3.3.8-bin.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Set Maven symbolic link
+      file:
+        src: /opt/apache-maven-3.3.8
+        dest: /opt/maven
+        state: link
 
     - name: Set environment variables for Java and Maven (Ubuntu)
       when: ansible_distribution == 'Ubuntu'
@@ -56,7 +80,7 @@
         - name: Set JAVA_HOME for Java
           lineinfile:
             path: /etc/profile
-            line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+            line: 'export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64'
             create: yes
 
         - name: Set PATH for Java
@@ -68,7 +92,7 @@
         - name: Set M2_HOME for Maven
           lineinfile:
             path: /etc/profile
-            line: 'export M2_HOME=/usr/share/maven'
+            line: 'export M2_HOME=/opt/maven'
             create: yes
 
         - name: Set PATH for Maven
@@ -83,7 +107,7 @@
         - name: Set JAVA_HOME for Java
           lineinfile:
             path: /etc/profile
-            line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64'
+            line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0'
             create: yes
 
         - name: Set PATH for Java
@@ -95,7 +119,7 @@
         - name: Set M2_HOME for Maven
           lineinfile:
             path: /etc/profile
-            line: 'export M2_HOME=/usr/share/maven'
+            line: 'export M2_HOME=/opt/maven'
             create: yes
 
         - name: Set PATH for Maven
