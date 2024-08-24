@@ -33,6 +33,18 @@
         name: maven
         state: present
 
+    - name: Install OpenJDK 11 on CentOS
+      when: ansible_distribution == 'CentOS'
+      yum:
+        name: java-11-openjdk
+        state: present
+
+    - name: Install Maven on CentOS
+      when: ansible_distribution == 'CentOS'
+      yum:
+        name: maven
+        state: present
+
     - name: Update apt cache (Ubuntu)
       when: ansible_distribution == 'Ubuntu'
       apt:
@@ -77,8 +89,8 @@
             line: 'export PATH=$M2_HOME/bin:$PATH'
             create: yes
 
-    - name: Set environment variables for Java and Maven (RedHat and Amazon Linux)
-      when: ansible_distribution in ['RedHat', 'Amazon']
+    - name: Set environment variables for Java and Maven (RedHat, Amazon Linux, and CentOS)
+      when: ansible_distribution in ['RedHat', 'Amazon', 'CentOS']
       block:
         - name: Set JAVA_HOME for Java
           lineinfile:
