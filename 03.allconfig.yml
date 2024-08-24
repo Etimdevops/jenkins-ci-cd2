@@ -1,23 +1,62 @@
 ---
-- name: Install Java 8 and Maven 3.3.8
+- name: Install Java 8, Maven, and verify versions
   hosts: all
   become: yes
   tasks:
-    - name: Install Java 8 (Amazon Linux 2)
-      when: ansible_distribution == 'Amazon'
-      package:
-        name: java-1.8.0-amazon-corretto
-        state: present
-
-    - name: Install Java 8 (Red Hat-based systems)
-      when: ansible_distribution == 'RedHat'
+    - name: Install Java 8, wget, and Maven dependencies
       yum:
-        name: java-1.8.0-openjdk
+        name:
+          - java-1.8.0-amazon-corretto
+          - wget
         state: present
 
-    - name: Install Java 8 (Ubuntu)
-      when: ansible_distribution == 'Ubuntu'
-      apt:
-        name: openjdk-8-jdk
-        state: present
+    - name: Set JAVA_HOME and update PATH
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: |
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+
+    - name: Download Maven 3.8.8
+      get_url:
+        url: https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+        dest: /tmp/apache-maven-3.8.8-bin.tar.gz
+
+    - name: Extract Maven
+      unarchive:
+        src: /tmp/apache-maven-3.8.8-bin.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Set up environment variables for Maven
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: |
+          export M2_HOME=/opt/apache-maven-3.8.8
+          export PATH=$M2_HOME/bin:$PATH
+        create: yes
+
+    - name: Verify Java version and Display JAVA_HOME
+      shell: |
+        java_version=$(java -version 2>&1)
+        echo "Java Version: $java_version"
+        echo "JAVA_HOME: $JAVA_HOME"
+      register: result
+      changed_when: false
+
+    - name: Check Maven version
+      command: mvn -v
+      environment:
+        M2_HOME: "/opt/apache-maven-3.8.8"
+        PATH: "/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
+      register: mvn_version
+      changed_when: false
+
+    - name: Show Java version, JAVA_HOME, and Maven version
+      debug:
+        msg: |
+          Java and Maven Setup:
+          {{ result.stdout_lines | join('\n') }}
+          Maven version installed: {{ mvn_version.stdout }}
 ...
