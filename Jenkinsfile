@@ -2,21 +2,22 @@ pipeline {
     agent any
     
     environment {
-        JAVA_HOME = '/usr/bin/java'
+        JAVA_HOME = '/usr/lib/jvm/java-11-openjdk'  // Example path, adjust according to your setup
+        MAVEN_HOME = '/usr/share/maven'              // Example path, adjust according to your setup
     }
     
     stages {
         stage('Build') {
             steps {
                 // Clean and build the project using the specified Maven path
-                sh '/usr/local/maven/bin/mvn clean package'
+                sh "${env.MAVEN_HOME}/bin/mvn clean package"
             }
         }
         
         stage('Test') {
             steps {
                 // Run tests using the specified Maven path
-                sh '/usr/bin/mvn test'
+                sh "${env.MAVEN_HOME}/bin/mvn test"
             }
         }
     }
