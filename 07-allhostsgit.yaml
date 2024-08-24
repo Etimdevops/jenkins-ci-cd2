@@ -1,6 +1,6 @@
 ---
-- name: Install Java and Maven
-  hosts: n4
+- name: Install Java, Maven, and Git
+  hosts: all
   become: yes
   tasks:
     - name: Update package repository (Amazon Linux 2)
@@ -21,6 +21,12 @@
         name: maven
         state: present
 
+    - name: Install Git (Amazon Linux 2)
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: git
+        state: present
+
     - name: Install OpenJDK 11 on Red Hat-based systems
       when: ansible_distribution == 'RedHat'
       yum:
@@ -31,6 +37,12 @@
       when: ansible_distribution == 'RedHat'
       yum:
         name: maven
+        state: present
+
+    - name: Install Git on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: git
         state: present
 
     - name: Update apt cache (Ubuntu)
@@ -48,6 +60,12 @@
       when: ansible_distribution == 'Ubuntu'
       apt:
         name: maven
+        state: present
+
+    - name: Install Git on Ubuntu systems
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: git
         state: present
 
     - name: Set environment variables for Java and Maven (Ubuntu)
@@ -116,6 +134,12 @@
       register: maven_version
       ignore_errors: yes
 
+    - name: Verify Git installation
+      shell: |
+        git --version
+      register: git_version
+      ignore_errors: yes
+
     - name: Display Java version or error
       debug:
         msg: "{{ java_version.stdout_lines | default('Java installation failed.') }}"
@@ -124,4 +148,7 @@
       debug:
         msg: "{{ maven_version.stdout_lines | default('Maven installation failed.') }}"
 
+    - name: Display Git version or error
+      debug:
+        msg: "{{ git_version.stdout_lines | default('Git installation failed.') }}"
 ...
