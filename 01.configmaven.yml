@@ -1,59 +1,19 @@
 ---
-- name: Install Maven 3.8.6 on Amazon Linux 2023
+- name: Install Maven compatible with Java 1.8
   hosts: all
   become: yes
   tasks:
-    - name: Verify connectivity to Maven download site
-      command: curl -I https://downloads.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-      register: curl_response
-      failed_when: "'200 OK' not in curl_response.stdout"
+    - name: Install Maven from the package manager
+      yum:
+        name: maven
+        state: present
+
+    - name: Check Maven version
+      command: mvn -v
+      register: mvn_version
       changed_when: false
 
-    - name: Download Maven 3.8.6 using wget
-      command: >
-        wget -O /tmp/apache-maven-3.8.6-bin.tar.gz
-        https://downloads.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-      args:
-        creates: /tmp/apache-maven-3.8.6-bin.tar.gz
-
-    - name: Check if download was successful
-      stat:
-        path: /tmp/apache-maven-3.8.6-bin.tar.gz
-      register: maven_tar_stat
-      failed_when: not maven_tar_stat.stat.exists
-      changed_when: false
-
-    - name: Extract Maven
-      unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
-        dest: /opt/
-        remote_src: yes
-      when: maven_tar_stat.stat.exists
-
-    - name: Create a symlink for Maven
-      file:
-        src: /opt/apache-maven-3.8.6
-        dest: /opt/maven
-        state: link
-
-    - name: Set MAVEN_HOME environment variable
-      lineinfile:
-        path: ~/.bash_profile
-        line: 'export MAVEN_HOME=/opt/maven'
-        create: yes
-        state: present
-      become: no
-
-    - name: Add Maven to PATH
-      lineinfile:
-        path: ~/.bash_profile
-        line: 'export PATH=$MAVEN_HOME/bin:$PATH'
-        create: yes
-        state: present
-      become: no
-
-    - name: Source bash_profile to apply MAVEN_HOME and PATH
-      shell: source ~/.bash_profile
-      become: no
-      when: ansible_env.SHELL == '/bin/bash'
+    - name: Display Maven version
+      debug:
+        msg: "Maven version installed: {{ mvn_version.stdout }}"
 ...
