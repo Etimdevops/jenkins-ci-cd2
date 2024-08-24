@@ -1,0 +1,52 @@
+---
+- name: Install Java, Maven, and Git
+  hosts: n4
+  become: yes
+  tasks:
+    # ... (other tasks remain the same)
+
+    - name: Install Git on Amazon Linux 2
+      when: ansible_distribution == 'Amazon'
+      package:
+        name: git
+        state: present
+
+    - name: Install Git on Red Hat-based systems
+      when: ansible_distribution == 'RedHat'
+      yum:
+        name: git
+        state: present
+
+    - name: Install Git on Ubuntu systems
+      when: ansible_distribution == 'Ubuntu'
+      apt:
+        name: git
+        state: present
+
+    - name: Find Git binary
+      shell: |
+        which git || find / -name git
+      register: git_path
+      ignore_errors: yes
+
+    - name: Display Git path
+      debug:
+        msg: "{{ git_path.stdout_lines }}"
+
+    - name: Add Git to PATH
+      lineinfile:
+        path: /etc/profile
+        line: 'export PATH=$PATH:/usr/local/bin'
+        create: yes
+      when: "'/usr/local/bin/git' in git_path.stdout_lines"
+
+    - name: Verify Git installation
+      shell: |
+        git --version
+      register: git_version
+      ignore_errors: yes
+
+    - name: Display Git version or error
+      debug:
+        msg: "{{ git_version.stdout_lines | default('Git installation failed.') }}"
+...
