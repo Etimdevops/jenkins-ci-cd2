@@ -8,12 +8,9 @@
         name: '*'
         state: latest
 
-    - name: Enable Amazon Linux Extras repository for Java 11
-      command: amazon-linux-extras enable java-openjdk11
-
     - name: Install Java 11
       yum:
-        name: java-openjdk11
+        name: java-11-openjdk
         state: present
 
     - name: Set JAVA_HOME environment variable
