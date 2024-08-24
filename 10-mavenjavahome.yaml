@@ -1,0 +1,45 @@
+---
+- name: Show Java and Maven Home Directories
+  hosts: all
+  become: yes
+  tasks:
+    - name: Show JAVA_HOME for Java (Amazon Linux 2, RedHat, CentOS)
+      shell: |
+        echo $JAVA_HOME
+      environment:
+        JAVA_HOME: "{{ lookup('env', 'JAVA_HOME') }}"
+      when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
+      register: java_home
+
+    - name: Show JAVA_HOME for Java (Ubuntu)
+      shell: |
+        echo $JAVA_HOME
+      environment:
+        JAVA_HOME: "{{ lookup('env', 'JAVA_HOME') }}"
+      when: ansible_distribution == 'Ubuntu'
+      register: java_home
+
+    - name: Show M2_HOME for Maven (Amazon Linux 2, RedHat, CentOS)
+      shell: |
+        echo $M2_HOME
+      environment:
+        M2_HOME: "{{ lookup('env', 'M2_HOME') }}"
+      when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
+      register: maven_home
+
+    - name: Show M2_HOME for Maven (Ubuntu)
+      shell: |
+        echo $M2_HOME
+      environment:
+        M2_HOME: "{{ lookup('env', 'M2_HOME') }}"
+      when: ansible_distribution == 'Ubuntu'
+      register: maven_home
+
+    - name: Display JAVA_HOME for Java
+      debug:
+        msg: "JAVA_HOME: {{ java_home.stdout | default('JAVA_HOME is not set.') }}"
+
+    - name: Display M2_HOME for Maven
+      debug:
+        msg: "M2_HOME: {{ maven_home.stdout | default('M2_HOME is not set.') }}"
+...
