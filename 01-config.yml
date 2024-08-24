@@ -1,98 +1,28 @@
 ---
-- name: Install Java 11, Maven 3.8.6, and Git
+- name: Install Java 11 on Amazon Linux 2
   hosts: all
   become: yes
   tasks:
-    - name: Update all packages
+    - name: Update package index
       yum:
         name: '*'
         state: latest
 
-    - name: Install Git
+    - name: Install Java 11
       yum:
-        name: git
+        name: java-11-openjdk-devel
         state: present
-
-    - name: Download and install Java 11
-      get_url:
-        url: https://download.java.net/java/GA/jdk11/13/GPL/openjdk-11.0.13_linux-x64_bin.tar.gz
-        dest: /tmp/openjdk-11_linux-x64_bin.tar.gz
-
-    - name: Extract Java 11
-      unarchive:
-        src: /tmp/openjdk-11_linux-x64_bin.tar.gz
-        dest: /opt
-        remote_src: yes
-
-    - name: Create a symlink for Java 11
-      file:
-        src: /opt/jdk-11.0.13
-        dest: /usr/lib/jvm/java-11-openjdk
-        state: link
 
     - name: Set JAVA_HOME environment variable
       lineinfile:
-        path: /etc/profile.d/java.sh
+        path: ~/.bash_profile
         line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk'
         create: yes
+        state: present
+      become: no
 
-    - name: Source the JAVA_HOME environment variable
-      shell: source /etc/profile.d/java.sh
-
-    - name: Download Maven 3.8.6
-      get_url:
-        url: https://archive.apache.org/dist/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-        dest: /tmp/apache-maven-3.8.6-bin.tar.gz
-
-    - name: Extract Maven
-      unarchive:
-        src: /tmp/apache-maven-3.8.6-bin.tar.gz
-        dest: /opt
-        remote_src: yes
-
-    - name: Create a symlink for Maven
-      file:
-        src: /opt/apache-maven-3.8.6
-        dest: /opt/maven
-        state: link
-
-    - name: Set MAVEN_HOME environment variable
-      lineinfile:
-        path: /etc/profile.d/maven.sh
-        line: 'export MAVEN_HOME=/opt/maven'
-        create: yes
-
-    - name: Add Maven to PATH
-      lineinfile:
-        path: /etc/profile.d/maven.sh
-        line: 'export PATH=$PATH:$MAVEN_HOME/bin'
-        create: yes
-
-    - name: Source the MAVEN_HOME environment variable
-      shell: source /etc/profile.d/maven.sh
-
-    - name: Verify Java installation
-      command: java -version
-      register: java_version
-      ignore_errors: yes
-
-    - name: Verify Maven installation
-      command: mvn -version
-      register: maven_version
-
-    - name: Verify Git installation
-      command: git --version
-      register: git_version
-
-    - name: Display Java version
-      debug:
-        msg: "Java version: {{ java_version.stdout | default('Not Installed') }}"
-
-    - name: Display Maven version
-      debug:
-        msg: "Maven version: {{ maven_version.stdout }}"
-
-    - name: Display Git version
-      debug:
-        msg: "Git version: {{ git_version.stdout }}"
+    - name: Source bash_profile to apply JAVA_HOME
+      shell: source ~/.bash_profile
+      become: no
+      when: ansible_env.SHELL == '/bin/bash'
 ...
