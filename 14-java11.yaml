@@ -9,12 +9,18 @@
         name: java-11-amazon-corretto
         state: present
 
+    - name: Discover the correct Java 11 path
+      command: alternatives --display java
+      register: java_alternatives
+
     - name: Set Java 11 as the default version
       alternatives:
         name: java
         link: /usr/bin/java
-        path: /usr/lib/jvm/java-11-amazon-corretto/bin/java
+        path: "{{ item }}"
         priority: 1
+      loop: "{{ java_alternatives.stdout_lines }}"
+      when: '"java-11-amazon-corretto" in item'
 
     - name: Verify Java installation
       command: java -version
