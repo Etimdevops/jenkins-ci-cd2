@@ -1,6 +1,6 @@
 ---
 - name: Show Java and Maven Installation Paths
-  hosts: all
+  hosts: n4
   become: yes
   tasks:
     - name: Check Java installation path (Amazon Linux 2, RedHat, CentOS)
