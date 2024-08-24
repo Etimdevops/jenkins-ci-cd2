@@ -1,0 +1,34 @@
+---
+- name: Ensure Java is installed and JAVA_HOME is set
+  hosts: g2
+  become: yes
+  tasks:
+    - name: Install OpenJDK
+      package:
+        name: java-11-openjdk
+        state: present
+
+    - name: Find Java installation path
+      command: readlink -f $(which java)
+      register: java_path
+
+    - name: Set JAVA_HOME environment variable
+      lineinfile:
+        path: /etc/profile
+        line: 'export JAVA_HOME={{ java_path.stdout | dirname | dirname }}'
+        create: yes
+        state: present
+
+    - name: Source the profile to apply changes
+      command: source /etc/profile
+      environment:
+        JAVA_HOME: "{{ java_path.stdout | dirname | dirname }}"
+
+    - name: Verify JAVA_HOME
+      command: echo $JAVA_HOME
+      register: java_home_check
+
+    - name: Print JAVA_HOME value
+      debug:
+        msg: "JAVA_HOME is set to {{ java_home_check.stdout }}"
+...
