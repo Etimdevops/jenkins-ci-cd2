@@ -52,8 +52,9 @@
       command: java -version
       register: java_version
       changed_when: false
+      failed_when: false
 
     - name: Display Java version
       debug:
-        msg: "{{ java_version.stdout }}"
+        msg: "{{ java_version.stderr_lines | join('') }}"
 ...
