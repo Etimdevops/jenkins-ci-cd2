@@ -1,5 +1,5 @@
 ---
-- name: Install Java 11 on Amazon Linux 2023
+- name: Install Java 8 on Amazon Linux 2023
   hosts: all
   become: yes
   tasks:
@@ -8,15 +8,15 @@
         name: '*'
         state: latest
 
-    - name: Install Java 11
+    - name: Install Java 8
       yum:
-        name: java-11-openjdk-devel
+        name: java-1.8.0-openjdk-devel
         state: present
 
     - name: Set JAVA_HOME environment variable
       lineinfile:
         path: ~/.bash_profile
-        line: 'export JAVA_HOME=/usr/lib/jvm/java-11-openjdk'
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk'
         create: yes
         state: present
       become: no
