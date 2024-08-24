@@ -4,23 +4,26 @@
   become: yes
   tasks:
     - name: Install OpenJDK
-      package:
-        name: java-11-openjdk
+      amazon_linux_extras:
+        name: java-openjdk11
         state: present
 
     - name: Find Java installation path
       command: readlink -f $(which java)
       register: java_path
 
-    - name: Set JAVA_HOME environment variable
-      lineinfile:
-        path: /etc/profile
-        line: 'export JAVA_HOME={{ java_path.stdout | dirname | dirname }}'
-        create: yes
-        state: present
+    - name: Create JAVA_HOME environment file
+      copy:
+        dest: /etc/profile.d/java.sh
+        content: |
+          # Set JAVA_HOME
+          export JAVA_HOME={{ java_path.stdout | dirname | dirname }}
+        mode: '0644'
+        owner: root
+        group: root
 
-    - name: Source the profile to apply changes
-      command: source /etc/profile
+    - name: Ensure profile.d scripts are sourced
+      command: source /etc/profile.d/java.sh
       environment:
         JAVA_HOME: "{{ java_path.stdout | dirname | dirname }}"
 
