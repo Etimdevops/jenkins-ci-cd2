@@ -1,45 +1,37 @@
 ---
-- name: Show Java and Maven Home Directories
+- name: Show Java and Maven Installation Paths
   hosts: all
   become: yes
   tasks:
-    - name: Show JAVA_HOME for Java (Amazon Linux 2, RedHat, CentOS)
-      shell: |
-        echo $JAVA_HOME
-      environment:
-        JAVA_HOME: "{{ lookup('env', 'JAVA_HOME') }}"
+    - name: Find Java installation path (Amazon Linux 2, RedHat, CentOS)
+      command: |
+        find /usr/lib/jvm -name '*java*' -type d
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
-      register: java_home
+      register: java_paths
 
-    - name: Show JAVA_HOME for Java (Ubuntu)
-      shell: |
-        echo $JAVA_HOME
-      environment:
-        JAVA_HOME: "{{ lookup('env', 'JAVA_HOME') }}"
+    - name: Find Java installation path (Ubuntu)
+      command: |
+        find /usr/lib/jvm -name '*java*' -type d
       when: ansible_distribution == 'Ubuntu'
-      register: java_home
+      register: java_paths
 
-    - name: Show M2_HOME for Maven (Amazon Linux 2, RedHat, CentOS)
-      shell: |
-        echo $M2_HOME
-      environment:
-        M2_HOME: "{{ lookup('env', 'M2_HOME') }}"
+    - name: Find Maven installation path (Amazon Linux 2, RedHat, CentOS)
+      command: |
+        find /usr/share/maven -type d
       when: ansible_distribution in ['Amazon', 'RedHat', 'CentOS']
-      register: maven_home
+      register: maven_paths
 
-    - name: Show M2_HOME for Maven (Ubuntu)
-      shell: |
-        echo $M2_HOME
-      environment:
-        M2_HOME: "{{ lookup('env', 'M2_HOME') }}"
+    - name: Find Maven installation path (Ubuntu)
+      command: |
+        find /usr/share/maven -type d
       when: ansible_distribution == 'Ubuntu'
-      register: maven_home
+      register: maven_paths
 
-    - name: Display JAVA_HOME for Java
+    - name: Display Java installation paths
       debug:
-        msg: "JAVA_HOME: {{ java_home.stdout | default('JAVA_HOME is not set.') }}"
+        msg: "Java installation paths: {{ java_paths.stdout_lines | default(['Java installation paths not found.']) }}"
 
-    - name: Display M2_HOME for Maven
+    - name: Display Maven installation paths
       debug:
-        msg: "M2_HOME: {{ maven_home.stdout | default('M2_HOME is not set.') }}"
+        msg: "Maven installation paths: {{ maven_paths.stdout_lines | default(['Maven installation paths not found.']) }}"
 ...
