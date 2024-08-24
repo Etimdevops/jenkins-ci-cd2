@@ -1,0 +1,37 @@
+---
+- name: Install Java 8 on Amazon Linux 2023
+  hosts: all
+  become: yes
+  tasks:
+    - name: Update package index
+      yum:
+        name: '*'
+        state: latest
+
+    - name: Install Amazon Corretto 8 repository
+      yum_repository:
+        name: amazon-corretto
+        description: Amazon Corretto 8
+        baseurl: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.rpm
+        gpgcheck: yes
+        gpgkey: https://www.amazon.com/amazon-corretto-key.asc
+        enabled: yes
+
+    - name: Install Amazon Corretto 8 JDK
+      yum:
+        name: java-1.8.0-amazon-corretto
+        state: present
+
+    - name: Set JAVA_HOME environment variable
+      lineinfile:
+        path: ~/.bash_profile
+        line: 'export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto'
+        create: yes
+        state: present
+      become: no
+
+    - name: Source bash_profile to apply JAVA_HOME
+      shell: source ~/.bash_profile
+      become: no
+      when: ansible_env.SHELL == '/bin/bash'
+...
