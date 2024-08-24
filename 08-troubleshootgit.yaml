@@ -3,21 +3,9 @@
   hosts: n4
   become: yes
   tasks:
-    - name: Install Git on Amazon Linux 2
-      when: ansible_distribution == 'Amazon'
-      package:
-        name: git
-        state: present
-
-    - name: Install Git on Red Hat-based systems
-      when: ansible_distribution == 'RedHat'
+    - name: Install Git on CentOS
+      when: ansible_distribution == 'CentOS'
       yum:
-        name: git
-        state: present
-
-    - name: Install Git on Ubuntu systems
-      when: ansible_distribution == 'Ubuntu'
-      apt:
         name: git
         state: present
 
