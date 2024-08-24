@@ -4,19 +4,15 @@ pipeline {
     stages {
         stage('Build') {
             steps {
-                script {
-                    // Clean and build the project
-                    sh 'mvn clean package'
-                }
+                // Clean and build the project using the specified Maven path
+                sh '/usr/bin/mvn clean package'
             }
         }
         
         stage('Test') {
             steps {
-                script {
-                    // Run tests
-                    sh 'mvn test'
-                }
+                // Run tests using the specified Maven path
+                sh '/usr/bin/mvn test'
             }
         }
     }
