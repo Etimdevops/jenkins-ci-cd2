@@ -10,6 +10,21 @@
         path: "{{ jenkins_workspace }}"
         state: directory
 
+    - name: Debug environment variables
+      ansible.builtin.shell: |
+        echo "JAVA_HOME=$JAVA_HOME"
+        echo "M2_HOME=$M2_HOME"
+        echo "PATH=$PATH"
+      args:
+        chdir: "{{ jenkins_workspace }}"
+      register: env_vars
+
+    - name: Show environment variables
+      ansible.builtin.debug:
+        msg: |
+          Environment Variables:
+          {{ env_vars.stdout }}
+
     - name: Run Maven build
       ansible.builtin.shell: |
         export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
