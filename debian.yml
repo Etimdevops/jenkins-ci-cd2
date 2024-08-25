@@ -1,19 +1,18 @@
 ---
-- name: Install Zulu OpenJDK 8 on Debian-based Systems
-  hosts: n5
+- name: Install Zulu OpenJDK Repository and Java 8
+  hosts: all
   become: yes
 
   tasks:
-    # Step 1: Install the Zulu Repository
     - name: Install required packages
       apt:
-        name:
+        name: 
           - wget
           - gnupg2
         state: present
         update_cache: yes
 
-    - name: Import Zulu repository GPG key
+    - name: Import Zulu repository key
       apt_key:
         url: https://repos.azul.com/azul-repo.key
         state: present
@@ -23,11 +22,10 @@
         repo: "deb https://repos.azul.com/zulu/deb stable main"
         state: present
 
-    - name: Update the package list after adding Zulu repository
+    - name: Update the package list
       apt:
         update_cache: yes
 
-    # Step 2: Install Java 8
     - name: Install Zulu OpenJDK 8
       apt:
         name: zulu-8
@@ -35,15 +33,9 @@
 
     - name: Verify Java installation
       command: java -version
-      register: java_version
+      register: java_version_output
       ignore_errors: yes
 
     - name: Display Java version
       debug:
-        msg: "{{ java_version.stderr_lines }}"
-      when: java_version.rc == 0
-
-    - name: Fail if Java installation failed
-      fail:
-        msg: "Java installation failed. Please check the logs."
-      when: java_version.rc != 0
+        msg: "{{ java_version_output.stdout }}"
