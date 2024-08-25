@@ -1,10 +1,11 @@
+---
 - name: Deploy Java Web Application
   hosts: deploy
   become: yes
   vars:
     tomcat_webapps_dir: "/opt/tomcat/webapps"
     war_file_path_file: "/tmp/war_file_path.txt"
-    app_name: "WebAppCal"  # Define your application name here
+    app_name: "WebAppCal"
 
   tasks:
     - name: Read WAR file path from file

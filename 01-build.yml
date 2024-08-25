@@ -1,3 +1,4 @@
+---
 - name: Perform Maven build
   hosts: n1
   become: yes
@@ -6,6 +7,7 @@
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
     m2_home: "/opt/apache-maven-3.8.8"
     app_name: "WebAppCal"  # Define your application name here
+    war_file_path: "{{ jenkins_workspace }}/target/{{ app_name }}.war"
   tasks:
     - name: Ensure Jenkins workspace directory exists
       ansible.builtin.file:
@@ -32,5 +34,5 @@
 
     - name: Save WAR file path to a file
       ansible.builtin.copy:
-        content: "{{ jenkins_workspace }}/target/{{ app_name }}.war"
+        content: "{{ war_file_path }}"
         dest: /tmp/war_file_path.txt

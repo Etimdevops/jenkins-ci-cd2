@@ -1,11 +1,12 @@
+---
 - name: Test Java Web Application
   hosts: n1
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
-    war_file_path_file: "/home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt"
-    expected_war_file: "{{ jenkins_workspace }}/target/{{ app_name }}-0.0.7.war"
-    app_name: "WebAppCal"  # Define your application name here
+    war_file_path_file: "/tmp/war_file_path.txt"
+    expected_war_file: "{{ jenkins_workspace }}/target/{{ app_name }}.war"
+    app_name: "WebAppCal"
   
   tasks:
     - name: Ensure test workspace directory exists

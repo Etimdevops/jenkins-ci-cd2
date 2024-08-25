@@ -1,8 +1,29 @@
+---
 - name: Transfer WAR file path to deployment servers
   hosts: deploy
-  become: yes
   tasks:
-    - name: Copy WAR file path file from build server
-      ansible.builtin.copy:
+    - name: Ensure /tmp directory exists on deployment servers
+      ansible.builtin.file:
+        path: /tmp
+        state: directory
+
+    - name: Fetch WAR file path from the build server
+      ansible.builtin.fetch:
         src: /tmp/war_file_path.txt
         dest: /tmp/war_file_path.txt
+        flat: yes
+
+    - name: Read WAR file path
+      ansible.builtin.slurp:
+        src: /tmp/war_file_path.txt
+      register: war_file_path_content
+
+    - name: Decode WAR file path
+      ansible.builtin.set_fact:
+        war_file_path: "{{ war_file_path_content.content | b64decode }}"
+
+    - name: Transfer WAR file to deployment server
+      ansible.builtin.copy:
+        src: "{{ war_file_path }}"
+        dest: /tmp/deployed_war_file.war
+        remote_src: yes
