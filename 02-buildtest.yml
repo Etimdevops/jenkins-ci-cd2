@@ -28,21 +28,19 @@
     - name: Run Maven build
       ansible.builtin.shell:
         cmd: |
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
+          export M2_HOME=/opt/apache-maven-3.8.8
+          export PATH=$M2_HOME/bin:$PATH
           mvn clean install
-        environment:
-          JAVA_HOME: "/usr/lib/jvm/java-1.8.0-amazon-corretto"
-          M2_HOME: "/opt/apache-maven-3.8.8"
-          PATH: "/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
-      args:
-        chdir: "{{ jenkins_workspace }}"
+        args:
+          chdir: "{{ jenkins_workspace }}"
 
     - name: Run Maven tests
       ansible.builtin.shell:
         cmd: |
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
+          export M2_HOME=/opt/apache-maven-3.8.8
+          export PATH=$M2_HOME/bin:$PATH
           mvn test
-        environment:
-          JAVA_HOME: "/usr/lib/jvm/java-1.8.0-amazon-corretto"
-          M2_HOME: "/opt/apache-maven-3.8.8"
-          PATH: "/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
-      args:
-        chdir: "{{ jenkins_workspace }}"
+        args:
+          chdir: "{{ jenkins_workspace }}"
