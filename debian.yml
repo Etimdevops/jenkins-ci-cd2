@@ -4,17 +4,15 @@
   become: yes
 
   tasks:
-    - name: Remove existing Zulu repository entries
-      lineinfile:
-        path: /etc/apt/sources.list.d/zulu.list
+    - name: Remove existing Zulu repository list files
+      file:
+        path: "/etc/apt/sources.list.d/zulu.list"
         state: absent
       ignore_errors: yes
 
-    - name: Remove any conflicting sources in the main sources.list
-      lineinfile:
-        path: /etc/apt/sources.list
-        state: absent
-        regexp: "^deb .*zulu/deb"
+    - name: Remove any conflicting Zulu repository entries from sources.list
+      command: >
+        sed -i '/^deb .*zulu\/deb/d' /etc/apt/sources.list
       ignore_errors: yes
 
     - name: Remove AdoptOpenJDK repository
@@ -31,7 +29,7 @@
 
     - name: Install required packages
       apt:
-        name: 
+        name:
           - wget
           - gnupg2
         state: present
