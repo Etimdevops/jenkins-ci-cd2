@@ -1,10 +1,10 @@
 ---
-- name: perform Maven build and test
-  hosts: all
+- name: Perform Maven build and test
+  hosts: n1
   become: yes
   vars:
-    jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"  # Updated path
-    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto"
+    jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
+    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64"
     m2_home: "/opt/apache-maven-3.8.8"
   tasks:
     - name: Ensure Jenkins workspace directory exists
@@ -32,7 +32,7 @@
         cmd: |
           export JAVA_HOME={{ java_home }}
           export M2_HOME={{ m2_home }}
-          export PATH=$M2_HOME/bin:$PATH
+          export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH
           echo "JAVA_HOME is set to $JAVA_HOME"
           echo "M2_HOME is set to $M2_HOME"
           echo "PATH is set to $PATH"
