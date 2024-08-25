@@ -1,0 +1,51 @@
+---
+- name: Install Java 8 on Debian, Red Hat, and Ubuntu
+  hosts: deploy
+  become: yes
+  tasks:
+
+    - name: Install Java 8 on Red Hat-based systems
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+      when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
+
+    - name: Install Java 8 on Debian-based systems
+      apt:
+        name: openjdk-8-jdk
+        state: present
+        update_cache: yes
+      when: ansible_distribution in ["Debian", "Ubuntu"]
+
+    - name: Set JAVA_HOME and update PATH for Red Hat-based systems
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: |
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+      when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
+
+    - name: Set JAVA_HOME and update PATH for Debian-based systems
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: |
+          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+      when: ansible_distribution in ["Debian", "Ubuntu"]
+
+    - name: Verify Java version and Display JAVA_HOME
+      shell: |
+        java_version=$(java -version 2>&1)
+        echo "Java Version: $java_version"
+        echo "JAVA_HOME: $JAVA_HOME"
+      register: result
+      changed_when: false
+
+    - name: Show Java version and JAVA_HOME
+      debug:
+        msg: |
+          Java Setup:
+          {{ result.stdout_lines | join('\n') }}
+...
