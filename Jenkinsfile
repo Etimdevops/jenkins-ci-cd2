@@ -3,23 +3,31 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git url: 'https://github.com/Etimdevops/jenkins-ci-cd2.git', branch: 'master'
+                dir('/home/ec2-user/jenkins-ci-cd2') {
+                    git url: 'https://github.com/Etimdevops/jenkins-ci-cd2.git', branch: 'master'
+                }
             }
         }
         stage('Build') {
             steps {
-                ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/home/ec2-user/jenkins-ci-cd2/hosts.ini', playbook: '/home/ec2-user/jenkins-ci-cd2/01-build.yml', vaultTmpPath: ''
+                dir('/home/ec2-user/jenkins-ci-cd2') {
+                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '01-build.yml'
+                }
             }
         }
         stage('Test') {
             steps {
-                ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/home/ec2-user/jenkins-ci-cd2/hosts.ini', playbook: '/home/ec2-user/jenkins-ci-cd2/02-test.yml', vaultTmpPath: ''
+                dir('/home/ec2-user/jenkins-ci-cd2') {
+                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '02-test.yml'
+                }
             }
         }
         stage('Deploy') {
             steps {
-                ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/home/ec2-user/jenkins-ci-cd2/hosts.ini', playbook: '/home/ec2-user/jenkins-ci-cd2/03-deploy.yml', vaultTmpPath: ''
+                dir('/home/ec2-user/jenkins-ci-cd2') {
+                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '03-deploy.yml'
+                }
             }
-        }   
+        }
     }
 }
