@@ -1,55 +1,11 @@
 ---
 - name: Deploy Java Web Application
-  hosts: deploy
+  hosts: all
   become: yes
   tasks:
-    - name: Ensure Tomcat directory exists
-      file:
-        path: /opt/tomcat
-        state: directory
-        owner: tomcat
-        group: tomcat
-        mode: '0755'
-
-    - name: Create Tomcat systemd service file
-      copy:
-        dest: /etc/systemd/system/tomcat.service
-        content: |
-          [Unit]
-          Description=Apache Tomcat Web Application Container
-          After=network.target
-
-          [Service]
-          Type=forking
-          User=tomcat
-          Group=tomcat
-          Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
-          Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
-          Environment="CATALINA_HOME=/opt/tomcat"
-          Environment="CATALINA_BASE=/opt/tomcat"
-          ExecStart=/opt/tomcat/bin/startup.sh
-          ExecStop=/opt/tomcat/bin/shutdown.sh
-          Restart=on-failure
-
-          [Install]
-          WantedBy=multi-user.target
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: Reload systemd to recognize new service
-      systemd:
-        daemon_reload: yes
-
-    - name: Ensure Tomcat service is enabled and started
-      systemd:
-        name: tomcat
-        enabled: yes
-        state: started
-
     - name: Read WAR file path from file
       slurp:
-        src: /tmp/war_path.txt
+        src: /tmp/war_file_path.txt
       register: war_file_path
 
     - name: Decode WAR file path
@@ -65,9 +21,18 @@
         mode: '0755'
 
     - name: Stop Tomcat service
-      systemd:
-        name: tomcat
-        state: stopped
+      block:
+        - name: Check Tomcat service status
+          command: systemctl is-active tomcat
+          register: tomcat_status
+          failed_when: false
+          changed_when: false
+
+        - name: Stop Tomcat service if running
+          systemd:
+            name: tomcat
+            state: stopped
+          when: tomcat_status.stdout == "active"
 
     - name: Deploy WAR file to Tomcat webapps directory
       copy:
@@ -78,16 +43,23 @@
         mode: '0644'
 
     - name: Start Tomcat service
-      systemd:
-        name: tomcat
-        state: started
+      block:
+        - name: Ensure Tomcat service is enabled and started
+          systemd:
+            name: tomcat
+            enabled: yes
+            state: started
 
-    - name: Verify Tomcat service is running
-      command: systemctl status tomcat
-      register: tomcat_status
-      failed_when: tomcat_status.rc != 0
-      changed_when: false
+        - name: Check Tomcat service status
+          command: systemctl status tomcat
+          register: tomcat_service_status
 
     - name: Show Tomcat service status
       debug:
-        msg: "{{ tomcat_status.stdout }}"
+        msg: "{{ tomcat_service_status.stdout }}"
+
+    - name: Verify Tomcat service is running
+      command: systemctl is-active tomcat
+      register: tomcat_running
+      failed_when: tomcat_running.stdout != "active"
+      changed_when: false
