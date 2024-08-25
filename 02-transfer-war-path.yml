@@ -1,10 +1,12 @@
 ---
-- name: Transfer WAR file path to deployment servers
+- name: Transfer WAR file path and WAR file to deployment servers
   hosts: n1
   become: yes
   vars:
     war_file_path_file: "/tmp/war_file_path.txt"
     transfer_file_path: "/tmp/war_file_path.txt"
+    war_file_src_path: "/home/ec2-user/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+    war_file_dest_path: "/tmp/WebAppCal-0.0.7.war"
   
   tasks:
     - name: Ensure /tmp directory exists on build server
@@ -42,6 +44,16 @@
       ansible.builtin.copy:
         src: "{{ transfer_file_path }}"
         dest: "/tmp/war_file_path.txt"
+      delegate_to: "{{ item }}"
+      with_items:
+        - n3
+        - n4
+        - n5
+
+    - name: Transfer WAR file to deployment servers
+      ansible.builtin.copy:
+        src: "{{ war_file_src_path }}"
+        dest: "{{ war_file_dest_path }}"
       delegate_to: "{{ item }}"
       with_items:
         - n3

@@ -16,15 +16,6 @@
         shell: /bin/nologin
         state: present
 
-    - name: Read WAR file path from file
-      slurp:
-        src: /tmp/war_file_path.txt
-      register: war_file_path
-
-    - name: Decode WAR file path
-      set_fact:
-        war_path: "{{ war_file_path['content'] | b64decode }}"
-
     - name: Ensure Tomcat webapps directory exists
       file:
         path: /opt/tomcat/webapps
@@ -49,7 +40,7 @@
 
     - name: Deploy WAR file to Tomcat webapps directory
       copy:
-        src: "{{ war_path }}"
+        src: "/tmp/WebAppCal-0.0.7.war"
         dest: /opt/tomcat/webapps/WebAppCal.war
         owner: tomcat
         group: tomcat
