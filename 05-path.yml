@@ -1,5 +1,5 @@
 ---
-- name: Detect Java and Maven Installation Paths
+- name: Verify Java and Maven Paths
   hosts: all
   become: yes
   tasks:
@@ -33,14 +33,46 @@
       register: maven_home
       changed_when: false
 
-    - name: Show Java installation paths
+    - name: Verify Java executable
+      stat:
+        path: "{{ java_path.stdout }}"
+      register: java_stat
+
+    - name: Verify Java home directory
+      stat:
+        path: "{{ java_home.stdout }}"
+      register: java_home_stat
+
+    - name: Verify Maven executable
+      stat:
+        path: "{{ maven_path.stdout }}"
+      register: maven_stat
+
+    - name: Verify Maven home directory
+      stat:
+        path: "{{ maven_home.stdout }}"
+      register: maven_home_stat
+
+    - name: Show Java and Maven paths
       debug:
         msg: |
           Java Path: {{ java_path.stdout }}
-          Java Home: {{ java_home.stdout }}
-
-    - name: Show Maven installation paths
-      debug:
-        msg: |
+          Java Home Directory: {{ java_home.stdout }}
           Maven Path: {{ maven_path.stdout }}
-          Maven Home: {{ maven_home.stdout }}
+          Maven Home Directory: {{ maven_home.stdout }}
+
+    - name: Check Java executable status
+      debug:
+        msg: "Java executable is present: {{ java_stat.stat.exists }}"
+
+    - name: Check Java home directory status
+      debug:
+        msg: "Java home directory is present: {{ java_home_stat.stat.exists }}"
+
+    - name: Check Maven executable status
+      debug:
+        msg: "Maven executable is present: {{ maven_stat.stat.exists }}"
+
+    - name: Check Maven home directory status
+      debug:
+        msg: "Maven home directory is present: {{ maven_home_stat.stat.exists }}"
