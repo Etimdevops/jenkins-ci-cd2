@@ -3,7 +3,7 @@
   hosts: all
   become: yes
   vars:
-    jenkins_workspace: "/default/path/to/workspace"  # Default path if not defined elsewhere
+    jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"  # Updated path
   tasks:
     - name: Run Maven build
       ansible.builtin.shell: |
@@ -12,7 +12,7 @@
         export PATH=$M2_HOME/bin:$PATH
         mvn clean install
       args:
-        chdir: "{{ jenkins_workspace | default('/default/path/to/workspace') }}"
+        chdir: "{{ jenkins_workspace }}"
 
     - name: Run Maven tests
       ansible.builtin.shell: |
@@ -21,4 +21,4 @@
         export PATH=$M2_HOME/bin:$PATH
         mvn test
       args:
-        chdir: "{{ jenkins_workspace | default('/default/path/to/workspace') }}"
+        chdir: "{{ jenkins_workspace }}"
