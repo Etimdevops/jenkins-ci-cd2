@@ -5,6 +5,11 @@
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"  # Updated path
   tasks:
+    - name: Ensure Jenkins workspace directory exists
+      ansible.builtin.file:
+        path: "{{ jenkins_workspace }}"
+        state: directory
+
     - name: Run Maven build
       ansible.builtin.shell: |
         export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
