@@ -1,11 +1,11 @@
----
-- name: Perform Maven build
+- name: Perform Maven build and create WAR file path file
   hosts: n1
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
     m2_home: "/opt/apache-maven-3.8.8"
+    war_file_path_file: "/home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt"
   tasks:
     - name: Ensure Jenkins workspace directory exists
       ansible.builtin.file:
@@ -21,6 +21,12 @@
         M2_HOME: "{{ m2_home }}"
         PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
       register: build_result
+
+    - name: Create WAR file path file
+      ansible.builtin.copy:
+        content: "{{ jenkins_workspace }}/target/WebAppCal-0.0.7.war"
+        dest: "{{ war_file_path_file }}"
+      when: build_result.rc == 0
 
     - name: Show Maven build result
       ansible.builtin.debug:

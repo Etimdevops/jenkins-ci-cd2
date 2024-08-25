@@ -1,26 +1,72 @@
----
-- name: Perform Maven test
-  hosts: n1
+- name: Test Java Web Application
+  hosts: test
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
-    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
-    m2_home: "/opt/apache-maven-3.8.8"
+    war_file_path_file: "/home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt"
+    expected_war_file: "{{ jenkins_workspace }}/target/WebAppCal-0.0.7.war"
+  
   tasks:
-    - name: Run Maven tests
+    - name: Ensure test workspace directory exists
+      ansible.builtin.file:
+        path: "{{ jenkins_workspace }}"
+        state: directory
+
+    - name: Check if WAR file exists
+      ansible.builtin.stat:
+        path: "{{ expected_war_file }}"
+      register: war_file_stat
+
+    - name: Fail if WAR file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file not found: {{ expected_war_file }}"
+      when: not war_file_stat.stat.exists
+
+    - name: Run unit tests
       ansible.builtin.shell:
         cmd: mvn test
         chdir: "{{ jenkins_workspace }}"
       environment:
-        JAVA_HOME: "{{ java_home }}"
-        M2_HOME: "{{ m2_home }}"
-        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
+        JAVA_HOME: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
+        M2_HOME: "/opt/apache-maven-3.8.8"
+        PATH: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre/bin:/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
       register: test_result
 
-    - name: Show Maven test result
+    - name: Show test result
       ansible.builtin.debug:
         msg: |
           Maven Test Result:
           {{ test_result.stdout }}
           Error Output:
           {{ test_result.stderr }}
+      when: test_result.rc != 0
+
+    - name: Verify that the WAR file path file exists
+      ansible.builtin.stat:
+        path: "{{ war_file_path_file }}"
+      register: war_file_path_stat
+
+    - name: Fail if WAR file path file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file path file not found: {{ war_file_path_file }}"
+      when: not war_file_path_stat.stat.exists
+
+    - name: Check contents of WAR file path file
+      ansible.builtin.slurp:
+        src: "{{ war_file_path_file }}"
+      register: war_file_path_slurp
+
+    - name: Set WAR file path as variable
+      ansible.builtin.set_fact:
+        war_file_path: "{{ war_file_path_slurp.content | b64decode | trim }}"
+
+    - name: Verify WAR file path
+      ansible.builtin.debug:
+        msg: "WAR file path from file: {{ war_file_path }}"
+
+    - name: Check if WAR file path is correct
+      ansible.builtin.assert:
+        that:
+          - war_file_path == expected_war_file
+        fail_msg: "WAR file path in file does not match expected path"
+        success_msg: "WAR file path is correct"
