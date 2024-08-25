@@ -2,50 +2,92 @@
 - name: Deploy Java Web Application
   hosts: deploy
   become: yes
-  vars:
-    tomcat_service_name: "{{ 'tomcat' if ansible_distribution == 'Ubuntu' else 'tomcat' if ansible_distribution == 'Debian' else 'tomcat' }}"
-    tomcat_webapps_dir: "/var/lib/tomcat/webapps"  # Update this if necessary
-
   tasks:
+    - name: Ensure Tomcat directory exists
+      file:
+        path: /opt/tomcat
+        state: directory
+        owner: tomcat
+        group: tomcat
+        mode: '0755'
+
+    - name: Create Tomcat systemd service file
+      copy:
+        dest: /etc/systemd/system/tomcat.service
+        content: |
+          [Unit]
+          Description=Apache Tomcat Web Application Container
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=tomcat
+          Group=tomcat
+          Environment="JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"
+          Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
+          Environment="CATALINA_HOME=/opt/tomcat"
+          Environment="CATALINA_BASE=/opt/tomcat"
+          ExecStart=/opt/tomcat/bin/startup.sh
+          ExecStop=/opt/tomcat/bin/shutdown.sh
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Reload systemd to recognize new service
+      systemd:
+        daemon_reload: yes
+
+    - name: Ensure Tomcat service is enabled and started
+      systemd:
+        name: tomcat
+        enabled: yes
+        state: started
+
     - name: Read WAR file path from file
-      ansible.builtin.slurp:
-        src: /tmp/war_file_path.txt
+      slurp:
+        src: /tmp/war_path.txt
       register: war_file_path
 
     - name: Decode WAR file path
-      ansible.builtin.set_fact:
-        war_file_path: "{{ war_file_path['content'] | b64decode }}"
+      set_fact:
+        war_path: "{{ war_file_path['content'] | b64decode }}"
 
     - name: Ensure Tomcat webapps directory exists
-      ansible.builtin.file:
-        path: "{{ tomcat_webapps_dir }}"
+      file:
+        path: /opt/tomcat/webapps
         state: directory
+        owner: tomcat
+        group: tomcat
+        mode: '0755'
 
-    - name: Stop Tomcat service (Debian/Ubuntu-based)
-      ansible.builtin.systemd:
-        name: "{{ tomcat_service_name }}"
+    - name: Stop Tomcat service
+      systemd:
+        name: tomcat
         state: stopped
-      when: ansible_distribution in ['Ubuntu', 'Debian']
 
-    - name: Stop Tomcat service (Red Hat-based)
-      ansible.builtin.systemd:
-        name: "{{ tomcat_service_name }}"
-        state: stopped
-      when: ansible_distribution in ['RedHat', 'CentOS']
+    - name: Deploy WAR file to Tomcat webapps directory
+      copy:
+        src: "{{ war_path }}"
+        dest: /opt/tomcat/webapps/WebAppCal.war
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
 
-    - name: Copy WAR file to Tomcat webapps directory
-      ansible.builtin.copy:
-        src: "{{ war_file_path }}"
-        dest: "{{ tomcat_webapps_dir }}/WebAppCal.war"
-    
-    - name: Start Tomcat service (Debian/Ubuntu-based)
-      ansible.builtin.systemd:
-        name: "{{ tomcat_service_name }}"
+    - name: Start Tomcat service
+      systemd:
+        name: tomcat
         state: started
-      when: ansible_distribution in ['Ubuntu', 'Debian']
 
-    - name: Start Tomcat service (Red Hat-based)
-      ansible.builtin.systemd:
-        name: "{{ tomcat_service_name }}"
-        state: started
-      when: ansible_distribution in ['RedHat', 'CentOS']
+    - name: Verify Tomcat service is running
+      command: systemctl status tomcat
+      register: tomcat_status
+      failed_when: tomcat_status.rc != 0
+      changed_when: false
+
+    - name: Show Tomcat service status
+      debug:
+        msg: "{{ tomcat_status.stdout }}"
