@@ -1,0 +1,8 @@
+- name: Transfer WAR file path to deployment servers
+  hosts: deploy
+  become: yes
+  tasks:
+    - name: Copy WAR file path file from build server
+      ansible.builtin.copy:
+        src: /home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt
+        dest: /tmp/war_file_path.txt
