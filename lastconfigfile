@@ -1,23 +1,20 @@
 ---
-- name: Install Java 8 on Debian, Red Hat, and Ubuntu
+- name: Install Java on Debian, Red Hat, and Ubuntu
   hosts: n5
   become: yes
   tasks:
 
-    - name: Install Java 8 on Red Hat-based systems
+    - name: Install Java on Red Hat-based systems
       yum:
         name: java-1.8.0-openjdk
         state: present
       when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
 
-    - name: Install Java 8 on Debian-based systems
+    - name: Install default Java on Debian-based systems
       apt:
-        name: "{{ item }}"
+        name: openjdk-11-jdk
         state: present
         update_cache: yes
-      loop:
-        - openjdk-8-jdk
-        - openjdk-8-jdk-headless
       when: ansible_distribution in ["Debian", "Ubuntu"]
 
     - name: Set JAVA_HOME and update PATH for Red Hat-based systems
@@ -33,7 +30,7 @@
       lineinfile:
         path: /etc/profile.d/java.sh
         line: |
-          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
           export PATH=$JAVA_HOME/bin:$PATH
         create: yes
       when: ansible_distribution in ["Debian", "Ubuntu"]
