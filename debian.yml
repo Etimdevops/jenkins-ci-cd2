@@ -4,6 +4,19 @@
   become: yes
 
   tasks:
+    - name: Remove existing Zulu repository entries
+      lineinfile:
+        path: /etc/apt/sources.list.d/zulu.list
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove any conflicting sources in the main sources.list
+      lineinfile:
+        path: /etc/apt/sources.list
+        state: absent
+        regexp: "^deb .*zulu/deb"
+      ignore_errors: yes
+
     - name: Remove AdoptOpenJDK repository
       apt_repository:
         repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ bookworm main"
@@ -33,12 +46,6 @@
       command: gpg --dearmor -o /usr/share/keyrings/zulu-archive-keyring.gpg /tmp/zulu-repo.key
       args:
         creates: /usr/share/keyrings/zulu-archive-keyring.gpg
-
-    - name: Ensure Zulu repository list is clean
-      file:
-        path: /etc/apt/sources.list.d/zulu.list
-        state: absent
-      ignore_errors: yes
 
     - name: Add the Zulu repository
       apt_repository:
