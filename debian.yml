@@ -1,6 +1,6 @@
 ---
 - name: Install Zulu OpenJDK Repository and Java 8
-  hosts: all
+  hosts: n5
   become: yes
 
   tasks:
