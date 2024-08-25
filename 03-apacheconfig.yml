@@ -55,9 +55,17 @@
         create: yes
       when: ansible_os_family == "RedHat"
 
-    - name: Reload environment variables
-      command: "source /etc/profile.d/tomcat.sh"
-      when: ansible_os_family in ["Debian", "Ubuntu", "RedHat"]
+    - name: Ensure environment variables are applied (Debian/Ubuntu-based)
+      shell: |
+        . /etc/profile.d/tomcat.sh
+        echo "CATALINA_HOME is set to $CATALINA_HOME"
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Ensure environment variables are applied (Red Hat-based)
+      shell: |
+        . /etc/profile.d/tomcat.sh
+        echo "CATALINA_HOME is set to $CATALINA_HOME"
+      when: ansible_os_family == "RedHat"
 
     - name: Start Tomcat service (Debian/Ubuntu-based)
       command: "/opt/tomcat/bin/startup.sh"
