@@ -1,0 +1,69 @@
+---
+- name: Deploy Java Web Application
+  hosts: deploy
+  become: yes
+  vars:
+    tomcat_webapps_dir: "/opt/tomcat/webapps"
+    war_file_path_file: "/tmp/war_file_path.txt"
+    app_name: "WebAppCal"  # Adjust based on your application name
+
+  tasks:
+    - name: Read WAR file path from file
+      ansible.builtin.slurp:
+        src: "{{ war_file_path_file }}"
+      register: war_file_path_slurp
+
+    - name: Set WAR file path as variable
+      ansible.builtin.set_fact:
+        war_file: "{{ war_file_path_slurp.content | b64decode | trim }}"
+
+    - name: Ensure Tomcat webapps directory exists
+      ansible.builtin.file:
+        path: "{{ tomcat_webapps_dir }}"
+        state: directory
+
+    - name: Stop Tomcat service (Debian/Ubuntu-based)
+      ansible.builtin.systemd:
+        name: tomcat
+        state: stopped
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Stop Tomcat service (Red Hat-based)
+      ansible.builtin.systemd:
+        name: tomcat
+        state: stopped
+      when: ansible_os_family == "RedHat"
+
+    - name: Deploy the WAR file to Tomcat
+      ansible.builtin.copy:
+        src: "{{ war_file }}"
+        dest: "{{ tomcat_webapps_dir }}/{{ app_name }}.war"
+        mode: '0644'
+
+    - name: Start Tomcat service (Debian/Ubuntu-based)
+      ansible.builtin.systemd:
+        name: tomcat
+        state: started
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Start Tomcat service (Red Hat-based)
+      ansible.builtin.systemd:
+        name: tomcat
+        state: started
+      when: ansible_os_family == "RedHat"
+
+    - name: Verify that the application is deployed
+      ansible.builtin.uri:
+        url: "http://localhost:8080/{{ app_name }}"
+        status_code: 200
+        timeout: 30
+        retries: 5
+        delay: 10
+      register: deployment_check
+
+    - name: Show deployment result
+      ansible.builtin.debug:
+        msg: |
+          Deployment verification result:
+          Status code: {{ deployment_check.status }}
+          Response: {{ deployment_check.content }}
