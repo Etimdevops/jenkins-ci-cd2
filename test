@@ -1,31 +1,62 @@
 ---
-- name: Perform Maven build and test
-  hosts: n1
+- name: Install Java 8, Maven, and verify versions
+  hosts: n3
   become: yes
-  vars:
-    jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
-    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
-    m2_home: "/opt/apache-maven-3.8.8"
   tasks:
-    - name: Ensure Jenkins workspace directory exists
-      ansible.builtin.file:
-        path: "{{ jenkins_workspace }}"
-        state: directory
+    - name: Install Java 8, wget, and Maven dependencies
+      yum:
+        name:
+          - java-1.8.0-amazon-corretto
+          - wget
+        state: present
 
-    - name: Run Maven build
-      ansible.builtin.shell:
-        cmd: mvn clean package
-        chdir: "{{ jenkins_workspace }}"
+    - name: Set JAVA_HOME and update PATH
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: |
+          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+
+    - name: Download Maven 3.8.8
+      get_url:
+        url: https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+        dest: /tmp/apache-maven-3.8.8-bin.tar.gz
+
+    - name: Extract Maven
+      unarchive:
+        src: /tmp/apache-maven-3.8.8-bin.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Set up environment variables for Maven
+      lineinfile:
+        path: /etc/profile.d/maven.sh
+        line: |
+          export M2_HOME=/opt/apache-maven-3.8.8
+          export PATH=$M2_HOME/bin:$PATH
+        create: yes
+
+    - name: Verify Java version and Display JAVA_HOME
+      shell: |
+        java_version=$(java -version 2>&1)
+        echo "Java Version: $java_version"
+        echo "JAVA_HOME: $JAVA_HOME"
+      register: result
+      changed_when: false
+
+    - name: Check Maven version
+      command: mvn -v
       environment:
-        JAVA_HOME: "{{ java_home }}"
-        M2_HOME: "{{ m2_home }}"
-        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
-      register: build_result
+        M2_HOME: "/opt/apache-maven-3.8.8"
+        PATH: "/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
+      register: mvn_version
+      changed_when: false
 
-    - name: Show Maven build result
-      ansible.builtin.debug:
+    - name: Show Java version, JAVA_HOME, and Maven version
+      debug:
         msg: |
-          Maven Build Result:
-          {{ build_result.stdout }}
-          Error Output:
-          {{ build_result.stderr }}
+          Java and Maven Setup:
+          {{ result.stdout_lines | join('\n') }}
+          Maven version installed: {{ mvn_version.stdout }}
+...
