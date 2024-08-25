@@ -1,38 +1,49 @@
 ---
-- name: Install Java 8 Manually on Debian
-  hosts: n5
+- name: Install Zulu OpenJDK 8 on Debian-based Systems
+  hosts: all
   become: yes
+
   tasks:
+    # Step 1: Install the Zulu Repository
+    - name: Install required packages
+      apt:
+        name:
+          - wget
+          - gnupg2
+        state: present
+        update_cache: yes
 
-    - name: Download Java 8 from Oracle
-      get_url:
-        url: https://path_to_java8_download.tar.gz
-        dest: /tmp/java8.tar.gz
+    - name: Import Zulu repository GPG key
+      apt_key:
+        url: https://repos.azul.com/azul-repo.key
+        state: present
 
-    - name: Extract Java 8
-      unarchive:
-        src: /tmp/java8.tar.gz
-        dest: /opt/
-        remote_src: yes
+    - name: Add the Zulu repository
+      apt_repository:
+        repo: "deb https://repos.azul.com/zulu/deb stable main"
+        state: present
 
-    - name: Set JAVA_HOME and update PATH
-      lineinfile:
-        path: /etc/profile.d/java.sh
-        line: |
-          export JAVA_HOME=/opt/jdk1.8.0_XXX
-          export PATH=$JAVA_HOME/bin:$PATH
-        create: yes
+    - name: Update the package list after adding Zulu repository
+      apt:
+        update_cache: yes
 
-    - name: Verify Java version and Display JAVA_HOME
-      shell: |
-        java_version=$(java -version 2>&1)
-        echo "Java Version: $java_version"
-        echo "JAVA_HOME: $JAVA_HOME"
-      register: result
-      changed_when: false
+    # Step 2: Install Java 8
+    - name: Install Zulu OpenJDK 8
+      apt:
+        name: zulu-8
+        state: present
 
-    - name: Show Java version and JAVA_HOME
+    - name: Verify Java installation
+      command: java -version
+      register: java_version
+      ignore_errors: yes
+
+    - name: Display Java version
       debug:
-        msg: |
-          Java Setup:
-          {{ result.stdout_lines | join('\n') }}
+        msg: "{{ java_version.stderr_lines }}"
+      when: java_version.rc == 0
+
+    - name: Fail if Java installation failed
+      fail:
+        msg: "Java installation failed. Please check the logs."
+      when: java_version.rc != 0
