@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'ansible' }  // Use the 'ansible' agent
     stages {
         stage('Checkout') {
             steps {
