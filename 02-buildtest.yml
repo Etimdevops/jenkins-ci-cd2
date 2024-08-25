@@ -3,7 +3,6 @@
   hosts: all
   become: yes
   tasks:
-    ...
     - name: Run Maven build
       ansible.builtin.shell: |
         export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
@@ -21,4 +20,3 @@
         mvn test
       args:
         chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
-...
