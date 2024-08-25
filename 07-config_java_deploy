@@ -1,5 +1,5 @@
 ---
-- name: Install Java 8 on Debian, Red Hat, and Ubuntu
+- name: Install Java 8 on Red Hat and Ubuntu, Java 11 on Debian
   hosts: n5
   become: yes
   tasks:
@@ -10,15 +10,19 @@
         state: present
       when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
 
-    - name: Install Java 8 on Debian-based systems
+    - name: Install Java 8 on Ubuntu
       apt:
-        name: "{{ item }}"
+        name: openjdk-8-jdk
         state: present
         update_cache: yes
-      loop:
-        - openjdk-8-jdk
-        - openjdk-8-jdk-headless
-      when: ansible_distribution in ["Debian", "Ubuntu"]
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Install Java 11 on Debian-based systems
+      apt:
+        name: openjdk-11-jdk
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Debian"
 
     - name: Set JAVA_HOME and update PATH for Red Hat-based systems
       lineinfile:
@@ -29,14 +33,23 @@
         create: yes
       when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
 
-    - name: Set JAVA_HOME and update PATH for Debian-based systems
+    - name: Set JAVA_HOME and update PATH for Ubuntu with Java 8
       lineinfile:
         path: /etc/profile.d/java.sh
         line: |
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           export PATH=$JAVA_HOME/bin:$PATH
         create: yes
-      when: ansible_distribution in ["Debian", "Ubuntu"]
+      when: ansible_distribution == "Ubuntu"
+
+    - name: Set JAVA_HOME and update PATH for Debian with Java 11
+      lineinfile:
+        path: /etc/profile.d/java.sh
+        line: |
+          export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+          export PATH=$JAVA_HOME/bin:$PATH
+        create: yes
+      when: ansible_distribution == "Debian"
 
     - name: Verify Java version and Display JAVA_HOME
       shell: |
