@@ -1,0 +1,46 @@
+---
+- name: Detect Java and Maven Installation Paths
+  hosts: all
+  become: yes
+  tasks:
+    - name: Find Java installation path
+      command: "which java"
+      register: java_path
+      changed_when: false
+
+    - name: Find Java home directory from java path
+      shell: |
+        if [ -x "$(command -v java)" ]; then
+          readlink -f $(which java) | sed "s:/bin/java::"
+        else
+          echo "Java not found"
+        fi
+      register: java_home
+      changed_when: false
+
+    - name: Find Maven installation path
+      command: "which mvn"
+      register: maven_path
+      changed_when: false
+
+    - name: Find Maven home directory from mvn path
+      shell: |
+        if [ -x "$(command -v mvn)" ]; then
+          readlink -f $(which mvn) | sed "s:/bin/mvn::"
+        else
+          echo "Maven not found"
+        fi
+      register: maven_home
+      changed_when: false
+
+    - name: Show Java installation paths
+      debug:
+        msg: |
+          Java Path: {{ java_path.stdout }}
+          Java Home: {{ java_home.stdout }}
+
+    - name: Show Maven installation paths
+      debug:
+        msg: |
+          Maven Path: {{ maven_path.stdout }}
+          Maven Home: {{ maven_home.stdout }}
