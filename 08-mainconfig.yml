@@ -1,6 +1,6 @@
 ---
 - name: Install Java 8 on Red Hat and Ubuntu, Zulu OpenJDK 8 on Debian
-  hosts: n5
+  hosts: deploy
   become: yes
 
   tasks:
