@@ -1,9 +1,9 @@
 ---
-- name: Install Java 8 on Red Hat and Ubuntu
-  hosts: deploy
+- name: Install Java 8 on Red Hat and Ubuntu, Zulu OpenJDK 8 on Debian
+  hosts: n5
   become: yes
-  tasks:
 
+  tasks:
     - name: Install Java 8 on Red Hat-based systems
       yum:
         name: java-1.8.0-openjdk
@@ -35,7 +35,77 @@
         create: yes
       when: ansible_distribution == "Ubuntu"
 
-    - name: Verify Java version and Display JAVA_HOME
+    - name: Install Zulu OpenJDK Repository and Java 8 on Debian
+      when: ansible_distribution == "Debian"
+      block:
+        - name: Remove existing Zulu repository list files
+          file:
+            path: "/etc/apt/sources.list.d/zulu.list"
+            state: absent
+          ignore_errors: yes
+
+        - name: Remove any conflicting Zulu repository entries from sources.list
+          command: >
+            sed -i '/^deb .*zulu\/deb/d' /etc/apt/sources.list
+          ignore_errors: yes
+
+        - name: Remove AdoptOpenJDK repository
+          apt_repository:
+            repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ bookworm main"
+            state: absent
+          ignore_errors: yes
+
+        - name: Remove AdoptOpenJDK list file if it exists
+          file:
+            path: /etc/apt/sources.list.d/adoptopenjdk.list
+            state: absent
+          ignore_errors: yes
+
+        - name: Install required packages
+          apt:
+            name:
+              - wget
+              - gnupg2
+            state: present
+            update_cache: yes
+
+        - name: Download Zulu repository key
+          get_url:
+            url: https://repos.azul.com/azul-repo.key
+            dest: /tmp/zulu-repo.key
+
+        - name: Convert Zulu repository key to gpg format
+          command: gpg --dearmor -o /usr/share/keyrings/zulu-archive-keyring.gpg /tmp/zulu-repo.key
+          args:
+            creates: /usr/share/keyrings/zulu-archive-keyring.gpg
+
+        - name: Add the Zulu repository
+          apt_repository:
+            repo: "deb [signed-by=/usr/share/keyrings/zulu-archive-keyring.gpg] https://repos.azul.com/zulu/deb stable main"
+            state: present
+            filename: "zulu.list"
+
+        - name: Update the package list
+          apt:
+            update_cache: yes
+
+        - name: Install Zulu OpenJDK 8
+          apt:
+            name: zulu-8
+            state: present
+
+        - name: Verify Java installation
+          command: java -version
+          register: java_version_output
+          ignore_errors: yes
+          changed_when: false
+
+        - name: Display Java version
+          debug:
+            msg: "{{ java_version_output.stderr }}"
+
+    - name: Verify Java version and Display JAVA_HOME for other distributions
+      when: ansible_distribution not in ["Debian"]
       shell: |
         java_version=$(java -version 2>&1)
         echo "Java Version: $java_version"
@@ -43,7 +113,8 @@
       register: result
       changed_when: false
 
-    - name: Show Java version and JAVA_HOME
+    - name: Show Java version and JAVA_HOME for other distributions
+      when: ansible_distribution not in ["Debian"]
       debug:
         msg: |
           Java Setup:
