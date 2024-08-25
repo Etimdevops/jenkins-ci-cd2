@@ -13,7 +13,7 @@ pipeline {
         }
         stage('Test') {
             steps {
-                ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/home/ec2-user/jenkins-ci-cd2/hosts.ini', playbook: '/home/ec2-user/jenkins-ci-cd2/03-test.yml', vaultTmpPath: ''
+                ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: '/home/ec2-user/jenkins-ci-cd2/hosts.ini', playbook: '/home/ec2-user/jenkins-ci-cd2/04-test.yml', vaultTmpPath: ''
             }
         }
     }
