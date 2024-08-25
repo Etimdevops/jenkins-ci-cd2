@@ -2,6 +2,8 @@
 - name: perform Maven build and test
   hosts: all
   become: yes
+  vars:
+    jenkins_workspace: "/default/path/to/workspace"  # Default path if not defined elsewhere
   tasks:
     - name: Run Maven build
       ansible.builtin.shell: |
@@ -10,7 +12,7 @@
         export PATH=$M2_HOME/bin:$PATH
         mvn clean install
       args:
-        chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
+        chdir: "{{ jenkins_workspace | default('/default/path/to/workspace') }}"
 
     - name: Run Maven tests
       ansible.builtin.shell: |
@@ -19,4 +21,4 @@
         export PATH=$M2_HOME/bin:$PATH
         mvn test
       args:
-        chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
+        chdir: "{{ jenkins_workspace | default('/default/path/to/workspace') }}"
