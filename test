@@ -1,3 +1,6 @@
+
+
+
 ---
 - name: Perform Maven build and test
   hosts: n1
@@ -29,3 +32,4 @@
           {{ build_result.stdout }}
           Error Output:
           {{ build_result.stderr }}
+
