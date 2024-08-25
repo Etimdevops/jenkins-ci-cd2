@@ -15,7 +15,7 @@
     - name: Run Maven build
       ansible.builtin.shell:
         cmd: mvn clean install
-        chdir: "{{ jenkins_workspace }}"
+        chdir: "{{ jenkins_workspace }}/javawebapp"
       environment:
         JAVA_HOME: "{{ java_home }}"
         M2_HOME: "{{ m2_home }}"
