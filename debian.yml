@@ -64,7 +64,8 @@
       command: java -version
       register: java_version_output
       ignore_errors: yes
+      changed_when: false
 
     - name: Display Java version
       debug:
-        msg: "{{ java_version_output.stdout }}"
+        msg: "{{ java_version_output.stderr }}"
