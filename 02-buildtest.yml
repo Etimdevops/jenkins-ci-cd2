@@ -1,5 +1,5 @@
 ---
-- name: perform Maven build and test
+- name: Perform Maven build and test
   hosts: all
   become: yes
   tasks:
