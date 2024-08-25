@@ -1,6 +1,6 @@
 ---
 - name: Install Zulu OpenJDK 8 on Debian-based Systems
-  hosts: all
+  hosts: n5
   become: yes
 
   tasks:
