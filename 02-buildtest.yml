@@ -1,5 +1,5 @@
 ---
-- name: Perform Maven build and test
+- name: Perform Maven build
   hosts: all
   become: yes
   vars:
@@ -11,14 +11,5 @@
         export M2_HOME=/opt/apache-maven-3.8.8
         export PATH=$M2_HOME/bin:$PATH
         mvn clean install
-      args:
-        chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
-
-    - name: Run Maven tests
-      ansible.builtin.shell: |
-        export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
-        export M2_HOME=/opt/apache-maven-3.8.8
-        export PATH=$M2_HOME/bin:$PATH
-        mvn test
       args:
         chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
