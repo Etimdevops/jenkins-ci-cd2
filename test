@@ -1,6 +1,3 @@
-
-
-
 ---
 - name: Perform Maven build and test
   hosts: n1
@@ -17,7 +14,7 @@
 
     - name: Run Maven build
       ansible.builtin.shell:
-        cmd: mvn clean install
+        cmd: mvn clean package
         chdir: "{{ jenkins_workspace }}"
       environment:
         JAVA_HOME: "{{ java_home }}"
@@ -32,4 +29,3 @@
           {{ build_result.stdout }}
           Error Output:
           {{ build_result.stderr }}
-

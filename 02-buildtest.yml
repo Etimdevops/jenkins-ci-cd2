@@ -29,3 +29,21 @@
           {{ build_result.stdout }}
           Error Output:
           {{ build_result.stderr }}
+
+    - name: Run Maven tests
+      ansible.builtin.shell:
+        cmd: mvn test
+        chdir: "{{ jenkins_workspace }}"
+      environment:
+        JAVA_HOME: "{{ java_home }}"
+        M2_HOME: "{{ m2_home }}"
+        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
+      register: test_result
+
+    - name: Show Maven test result
+      ansible.builtin.debug:
+        msg: |
+          Maven Test Result:
+          {{ test_result.stdout }}
+          Error Output:
+          {{ test_result.stderr }}
