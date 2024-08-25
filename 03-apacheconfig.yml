@@ -1,0 +1,70 @@
+---
+- name: Install Apache Tomcat
+  hosts: deploy
+  become: yes
+  vars:
+    tomcat_version: "9.0.75"
+    tomcat_tarball: "apache-tomcat-{{ tomcat_version }}-bin.tar.gz"
+    tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_tarball }}"
+
+  tasks:
+    - name: Ensure required packages are installed (Debian/Ubuntu-based)
+      apt:
+        name:
+          - wget
+          - tar
+        state: present
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Ensure required packages are installed (Red Hat-based)
+      yum:
+        name:
+          - wget
+          - tar
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Download Tomcat tarball
+      get_url:
+        url: "{{ tomcat_download_url }}"
+        dest: "/tmp/{{ tomcat_tarball }}"
+
+    - name: Extract Tomcat tarball
+      unarchive:
+        src: "/tmp/{{ tomcat_tarball }}"
+        dest: "/opt/"
+        remote_src: yes
+
+    - name: Create a symlink for Tomcat
+      file:
+        src: "/opt/apache-tomcat-{{ tomcat_version }}"
+        dest: "/opt/tomcat"
+        state: link
+
+    - name: Set up Tomcat environment variables (Debian/Ubuntu-based)
+      lineinfile:
+        path: "/etc/profile.d/tomcat.sh"
+        line: 'export CATALINA_HOME="/opt/tomcat"'
+        create: yes
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Set up Tomcat environment variables (Red Hat-based)
+      lineinfile:
+        path: "/etc/profile.d/tomcat.sh"
+        line: 'export CATALINA_HOME="/opt/tomcat"'
+        create: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Reload environment variables
+      command: "source /etc/profile.d/tomcat.sh"
+      when: ansible_os_family in ["Debian", "Ubuntu", "RedHat"]
+
+    - name: Start Tomcat service (Debian/Ubuntu-based)
+      command: "/opt/tomcat/bin/startup.sh"
+      become: yes
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Start Tomcat service (Red Hat-based)
+      command: "/opt/tomcat/bin/startup.sh"
+      become: yes
+      when: ansible_os_family == "RedHat"
