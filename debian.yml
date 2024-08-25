@@ -34,10 +34,17 @@
       args:
         creates: /usr/share/keyrings/zulu-archive-keyring.gpg
 
+    - name: Ensure Zulu repository list is clean
+      file:
+        path: /etc/apt/sources.list.d/zulu.list
+        state: absent
+      ignore_errors: yes
+
     - name: Add the Zulu repository
       apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/zulu-archive-keyring.gpg] https://repos.azul.com/zulu/deb stable main"
         state: present
+        filename: "zulu.list"
 
     - name: Update the package list
       apt:
