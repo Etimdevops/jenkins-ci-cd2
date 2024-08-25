@@ -3,6 +3,19 @@
   hosts: deploy
   become: yes
   tasks:
+    - name: Create tomcat group if it does not exist
+      group:
+        name: tomcat
+        state: present
+
+    - name: Create tomcat user if it does not exist
+      user:
+        name: tomcat
+        group: tomcat
+        system: yes
+        shell: /bin/nologin
+        state: present
+
     - name: Read WAR file path from file
       slurp:
         src: /tmp/war_file_path.txt
