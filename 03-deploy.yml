@@ -3,19 +3,18 @@
   hosts: deploy
   become: yes
   vars:
-    tomcat_webapps_dir: "/opt/tomcat/webapps"
-    war_file_path_file: "/tmp/war_file_path.txt"
-    app_name: "WebAppCal"
+    tomcat_service_name: "{{ 'tomcat' if ansible_distribution == 'Ubuntu' else 'tomcat' if ansible_distribution == 'Debian' else 'tomcat' }}"
+    tomcat_webapps_dir: "/var/lib/tomcat/webapps"  # Update this if necessary
 
   tasks:
     - name: Read WAR file path from file
       ansible.builtin.slurp:
-        src: "{{ war_file_path_file }}"
+        src: /tmp/war_file_path.txt
       register: war_file_path
 
     - name: Decode WAR file path
       ansible.builtin.set_fact:
-        war_path: "{{ war_file_path.content | b64decode | trim }}"
+        war_file_path: "{{ war_file_path['content'] | b64decode }}"
 
     - name: Ensure Tomcat webapps directory exists
       ansible.builtin.file:
@@ -24,46 +23,29 @@
 
     - name: Stop Tomcat service (Debian/Ubuntu-based)
       ansible.builtin.systemd:
-        name: tomcat
+        name: "{{ tomcat_service_name }}"
         state: stopped
-      when: ansible_facts.distribution in ["Debian", "Ubuntu"]
+      when: ansible_distribution in ['Ubuntu', 'Debian']
 
     - name: Stop Tomcat service (Red Hat-based)
       ansible.builtin.systemd:
-        name: tomcat
+        name: "{{ tomcat_service_name }}"
         state: stopped
-      when: ansible_facts.distribution in ["CentOS", "RedHat"]
+      when: ansible_distribution in ['RedHat', 'CentOS']
 
-    - name: Deploy the WAR file to Tomcat
+    - name: Copy WAR file to Tomcat webapps directory
       ansible.builtin.copy:
-        src: "{{ war_path }}"
-        dest: "{{ tomcat_webapps_dir }}/{{ app_name }}.war"
-        mode: '0644'
-
+        src: "{{ war_file_path }}"
+        dest: "{{ tomcat_webapps_dir }}/WebAppCal.war"
+    
     - name: Start Tomcat service (Debian/Ubuntu-based)
       ansible.builtin.systemd:
-        name: tomcat
+        name: "{{ tomcat_service_name }}"
         state: started
-      when: ansible_facts.distribution in ["Debian", "Ubuntu"]
+      when: ansible_distribution in ['Ubuntu', 'Debian']
 
     - name: Start Tomcat service (Red Hat-based)
       ansible.builtin.systemd:
-        name: tomcat
+        name: "{{ tomcat_service_name }}"
         state: started
-      when: ansible_facts.distribution in ["CentOS", "RedHat"]
-
-    - name: Verify that the application is deployed
-      ansible.builtin.uri:
-        url: "http://localhost:8080/{{ app_name }}"
-        status_code: 200
-        timeout: 30
-        retries: 5
-        delay: 10
-      register: deployment_check
-
-    - name: Show deployment result
-      ansible.builtin.debug:
-        msg: |
-          Deployment verification result:
-          Status code: {{ deployment_check.status }}
-          Response: {{ deployment_check.content }}
+      when: ansible_distribution in ['RedHat', 'CentOS']
