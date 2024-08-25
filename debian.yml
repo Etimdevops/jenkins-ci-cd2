@@ -4,6 +4,18 @@
   become: yes
 
   tasks:
+    - name: Remove AdoptOpenJDK repository
+      apt_repository:
+        repo: "deb https://adoptopenjdk.jfrog.io/adoptopenjdk/deb/ bookworm main"
+        state: absent
+      ignore_errors: yes
+
+    - name: Remove AdoptOpenJDK list file if it exists
+      file:
+        path: /etc/apt/sources.list.d/adoptopenjdk.list
+        state: absent
+      ignore_errors: yes
+
     - name: Install required packages
       apt:
         name: 
@@ -12,14 +24,15 @@
         state: present
         update_cache: yes
 
-    - name: Import Zulu repository key
-      apt_key:
-        url: https://repos.azul.com/azul-repo.key
-        state: present
+    - name: Import Zulu repository key using gpg
+      command: |
+        wget -qO - https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/zulu-archive-keyring.gpg
+      args:
+        creates: /usr/share/keyrings/zulu-archive-keyring.gpg
 
     - name: Add the Zulu repository
       apt_repository:
-        repo: "deb https://repos.azul.com/zulu/deb stable main"
+        repo: "deb [signed-by=/usr/share/keyrings/zulu-archive-keyring.gpg] https://repos.azul.com/zulu/deb stable main"
         state: present
 
     - name: Update the package list
