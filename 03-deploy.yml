@@ -10,11 +10,11 @@
     - name: Read WAR file path from file
       ansible.builtin.slurp:
         src: "{{ war_file_path_file }}"
-      register: war_file_path_slurp
+      register: war_file_path
 
-    - name: Set WAR file path as variable
+    - name: Decode WAR file path
       ansible.builtin.set_fact:
-        war_file: "{{ war_file_path_slurp.content | b64decode | trim }}"
+        war_path: "{{ war_file_path.content | b64decode | trim }}"
 
     - name: Ensure Tomcat webapps directory exists
       ansible.builtin.file:
@@ -25,17 +25,17 @@
       ansible.builtin.systemd:
         name: tomcat
         state: stopped
-      when: ansible_os_family in ["Debian", "Ubuntu"]
+      when: ansible_facts.distribution in ["Debian", "Ubuntu"]
 
     - name: Stop Tomcat service (Red Hat-based)
       ansible.builtin.systemd:
         name: tomcat
         state: stopped
-      when: ansible_os_family == "RedHat"
+      when: ansible_facts.distribution in ["CentOS", "RedHat"]
 
     - name: Deploy the WAR file to Tomcat
       ansible.builtin.copy:
-        src: "{{ war_file }}"
+        src: "{{ war_path }}"
         dest: "{{ tomcat_webapps_dir }}/{{ app_name }}.war"
         mode: '0644'
 
@@ -43,13 +43,13 @@
       ansible.builtin.systemd:
         name: tomcat
         state: started
-      when: ansible_os_family in ["Debian", "Ubuntu"]
+      when: ansible_facts.distribution in ["Debian", "Ubuntu"]
 
     - name: Start Tomcat service (Red Hat-based)
       ansible.builtin.systemd:
         name: tomcat
         state: started
-      when: ansible_os_family == "RedHat"
+      when: ansible_facts.distribution in ["CentOS", "RedHat"]
 
     - name: Verify that the application is deployed
       ansible.builtin.uri:

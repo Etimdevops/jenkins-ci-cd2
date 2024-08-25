@@ -1,5 +1,5 @@
 - name: Test Java Web Application
-  hosts: test
+  hosts: n1
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"

@@ -6,6 +6,8 @@
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
     m2_home: "/opt/apache-maven-3.8.8"
     war_file_path_file: "/home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt"
+    war_file_name: "WebAppCal-0.0.7.war"
+    war_file_path: "{{ jenkins_workspace }}/target/{{ war_file_name }}"
   tasks:
     - name: Ensure Jenkins workspace directory exists
       ansible.builtin.file:
@@ -24,7 +26,7 @@
 
     - name: Create WAR file path file
       ansible.builtin.copy:
-        content: "{{ jenkins_workspace }}/target/WebAppCal-0.0.7.war"
+        content: "{{ war_file_path }}"
         dest: "{{ war_file_path_file }}"
       when: build_result.rc == 0
 
