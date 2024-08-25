@@ -8,23 +8,17 @@
       yum:
         name: java-1.8.0-openjdk
         state: present
-      when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Amazon"
+      when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
 
     - name: Install Java 8 on Debian-based systems
       apt:
-        name: openjdk-8-jdk
+        name: "{{ item }}"
         state: present
         update_cache: yes
-      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
-      ignore_errors: yes
-
-    - name: Install Java 8 on Debian-based systems (alternative package name)
-      apt:
-        name: openjdk-8-jdk-headless
-        state: present
-        update_cache: yes
-      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
-      ignore_errors: yes
+      loop:
+        - openjdk-8-jdk
+        - openjdk-8-jdk-headless
+      when: ansible_distribution in ["Debian", "Ubuntu"]
 
     - name: Set JAVA_HOME and update PATH for Red Hat-based systems
       lineinfile:
@@ -33,7 +27,7 @@
           export JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk
           export PATH=$JAVA_HOME/bin:$PATH
         create: yes
-      when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Amazon"
+      when: ansible_distribution in ["RedHat", "CentOS", "Amazon"]
 
     - name: Set JAVA_HOME and update PATH for Debian-based systems
       lineinfile:
@@ -42,7 +36,7 @@
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           export PATH=$JAVA_HOME/bin:$PATH
         create: yes
-      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+      when: ansible_distribution in ["Debian", "Ubuntu"]
 
     - name: Verify Java version and Display JAVA_HOME
       shell: |
@@ -57,4 +51,3 @@
         msg: |
           Java Setup:
           {{ result.stdout_lines | join('\n') }}
-...
