@@ -1,6 +1,6 @@
 ---
 - name: Deploy Java Web Application
-  hosts: all
+  hosts: deploy
   become: yes
   tasks:
     - name: Read WAR file path from file
