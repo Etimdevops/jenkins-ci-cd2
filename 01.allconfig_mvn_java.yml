@@ -1,6 +1,6 @@
 ---
 - name: Install Java 8 on Debian, Red Hat, and Ubuntu
-  hosts: deploy
+  hosts: n5
   become: yes
   tasks:
 
