@@ -3,9 +3,9 @@
   hosts: deploy
   become: yes
   vars:
-    tomcat_version: "9.0.82"
+    tomcat_version: "9.0.93"
     tomcat_tarball: "apache-tomcat-{{ tomcat_version }}-bin.tar.gz"
-    tomcat_download_url: "https://downloads.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_tarball }}"
+    tomcat_download_url: "https://dlcdn.apache.org/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_tarball }}"
 
   tasks:
     - name: Ensure required packages are installed (Debian/Ubuntu-based)
