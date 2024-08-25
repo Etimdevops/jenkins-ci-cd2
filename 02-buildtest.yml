@@ -2,6 +2,8 @@
 - name: Perform Maven build and test
   hosts: all
   become: yes
+  vars:
+    jenkins_workspace: "/path/to/jenkins/workspace"  # Define this path according to your setup
   tasks:
     - name: Run Maven build
       ansible.builtin.shell: |
