@@ -4,7 +4,8 @@
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
     war_file_path_file: "/home/ec2-user/workspace/JenkinsAnsible/target/war_file_path.txt"
-    expected_war_file: "{{ jenkins_workspace }}/target/WebAppCal-0.0.7.war"
+    expected_war_file: "{{ jenkins_workspace }}/target/{{ app_name }}-0.0.7.war"
+    app_name: "WebAppCal"  # Define your application name here
   
   tasks:
     - name: Ensure test workspace directory exists
@@ -27,9 +28,9 @@
         cmd: mvn test
         chdir: "{{ jenkins_workspace }}"
       environment:
-        JAVA_HOME: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
-        M2_HOME: "/opt/apache-maven-3.8.8"
-        PATH: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre/bin:/opt/apache-maven-3.8.8/bin:{{ ansible_env.PATH }}"
+        JAVA_HOME: "{{ java_home }}"
+        M2_HOME: "{{ m2_home }}"
+        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
       register: test_result
 
     - name: Show test result

@@ -4,7 +4,7 @@
   vars:
     tomcat_webapps_dir: "/opt/tomcat/webapps"
     war_file_path_file: "/tmp/war_file_path.txt"
-    app_name: "WebAppCal"  # Adjust based on your application name
+    app_name: "WebAppCal"  # Define your application name here
 
   tasks:
     - name: Read WAR file path from file
