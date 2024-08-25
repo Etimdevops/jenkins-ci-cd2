@@ -3,13 +3,13 @@
   hosts: all
   become: yes
   vars:
-    jenkins_workspace: "/path/to/jenkins/workspace"  # Define this path according to your setup
+    jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
   tasks:
-    - name: Run Maven build
+    - name: Run Maven package
       ansible.builtin.shell: |
         export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
         export M2_HOME=/opt/apache-maven-3.8.8
         export PATH=$M2_HOME/bin:$PATH
-        mvn clean install
+        mvn clean package
       args:
-        chdir: "{{ jenkins_workspace }}"  # Path passed as a variable
+        chdir: "{{ jenkins_workspace }}"
