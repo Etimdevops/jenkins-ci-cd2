@@ -12,29 +12,15 @@
         path: "{{ jenkins_workspace }}"
         state: directory
 
-    - name: Debug environment variables
-      ansible.builtin.shell: |
-        echo "JAVA_HOME=$JAVA_HOME"
-        echo "M2_HOME=$M2_HOME"
-        echo "PATH=$PATH"
-      register: env_vars
-      args:
-        chdir: "{{ jenkins_workspace }}"
-
-    - name: Show environment variables
-      ansible.builtin.debug:
-        msg: |
-          Environment Variables:
-          {{ env_vars.stdout }}
-
     - name: Run Maven build
       ansible.builtin.shell:
         cmd: |
-          export JAVA_HOME={{ java_home }}
-          export M2_HOME={{ m2_home }}
-          export PATH=$JAVA_HOME/bin:$M2_HOME/bin:$PATH
           echo "JAVA_HOME is set to $JAVA_HOME"
           echo "M2_HOME is set to $M2_HOME"
           echo "PATH is set to $PATH"
           mvn clean install
         chdir: "{{ jenkins_workspace }}"
+      environment:
+        JAVA_HOME: "{{ java_home }}"
+        M2_HOME: "{{ m2_home }}"
+        PATH: "{{ java_home }}/bin:{{ m2_home }}/bin:{{ ansible_env.PATH }}"
