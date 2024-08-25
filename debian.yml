@@ -1,6 +1,6 @@
 ---
 - name: Install Zulu OpenJDK Repository and Java 8
-  hosts: n5
+  hosts: all
   become: yes
 
   tasks:
@@ -24,9 +24,13 @@
         state: present
         update_cache: yes
 
-    - name: Import Zulu repository key using gpg
-      command: |
-        wget -qO - https://repos.azul.com/azul-repo.key | gpg --dearmor -o /usr/share/keyrings/zulu-archive-keyring.gpg
+    - name: Download Zulu repository key
+      get_url:
+        url: https://repos.azul.com/azul-repo.key
+        dest: /tmp/zulu-repo.key
+
+    - name: Convert Zulu repository key to gpg format
+      command: gpg --dearmor -o /usr/share/keyrings/zulu-archive-keyring.gpg /tmp/zulu-repo.key
       args:
         creates: /usr/share/keyrings/zulu-archive-keyring.gpg
 
