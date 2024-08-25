@@ -1,29 +1,49 @@
 ---
 - name: Transfer WAR file path to deployment servers
-  hosts: deploy
+  hosts: n1
+  become: yes
+  vars:
+    war_file_path_file: "/tmp/war_file_path.txt"
+    transfer_file_path: "/tmp/war_file_path.txt"
+  
   tasks:
-    - name: Ensure /tmp directory exists on deployment servers
+    - name: Ensure /tmp directory exists on build server
       ansible.builtin.file:
-        path: /tmp
+        path: "/tmp"
         state: directory
 
-    - name: Fetch WAR file path from the build server
+    - name: Check if WAR file path file exists on build server
+      ansible.builtin.stat:
+        path: "{{ war_file_path_file }}"
+      register: war_file_path_stat
+
+    - name: Fail if WAR file path file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file path file not found: {{ war_file_path_file }}"
+      when: not war_file_path_stat.stat.exists
+
+    - name: Fetch WAR file path from build server
       ansible.builtin.fetch:
-        src: /tmp/war_file_path.txt
-        dest: /tmp/war_file_path.txt
+        src: "{{ war_file_path_file }}"
+        dest: "{{ transfer_file_path }}"
         flat: yes
 
-    - name: Read WAR file path
-      ansible.builtin.slurp:
-        src: /tmp/war_file_path.txt
-      register: war_file_path_content
+    - name: Ensure /tmp directory exists on deployment servers
+      ansible.builtin.file:
+        path: "/tmp"
+        state: directory
+      delegate_to: "{{ item }}"
+      with_items:
+        - n3
+        - n4
+        - n5
 
-    - name: Decode WAR file path
-      ansible.builtin.set_fact:
-        war_file_path: "{{ war_file_path_content.content | b64decode }}"
-
-    - name: Transfer WAR file to deployment server
+    - name: Transfer WAR file path to deployment servers
       ansible.builtin.copy:
-        src: "{{ war_file_path }}"
-        dest: /tmp/deployed_war_file.war
-        remote_src: yes
+        src: "{{ transfer_file_path }}"
+        dest: "/tmp/war_file_path.txt"
+      delegate_to: "{{ item }}"
+      with_items:
+        - n3
+        - n4
+        - n5
