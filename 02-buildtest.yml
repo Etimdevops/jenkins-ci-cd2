@@ -4,6 +4,8 @@
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"  # Updated path
+    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto"
+    m2_home: "/opt/apache-maven-3.8.8"
   tasks:
     - name: Ensure Jenkins workspace directory exists
       ansible.builtin.file:
@@ -28,17 +30,11 @@
     - name: Run Maven build
       ansible.builtin.shell:
         cmd: |
-          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
-          export M2_HOME=/opt/apache-maven-3.8.8
+          export JAVA_HOME={{ java_home }}
+          export M2_HOME={{ m2_home }}
           export PATH=$M2_HOME/bin:$PATH
+          echo "JAVA_HOME is set to $JAVA_HOME"
+          echo "M2_HOME is set to $M2_HOME"
+          echo "PATH is set to $PATH"
           mvn clean install
-        chdir: "{{ jenkins_workspace }}"
-
-    - name: Run Maven tests
-      ansible.builtin.shell:
-        cmd: |
-          export JAVA_HOME=/usr/lib/jvm/java-1.8.0-amazon-corretto
-          export M2_HOME=/opt/apache-maven-3.8.8
-          export PATH=$M2_HOME/bin:$PATH
-          mvn test
         chdir: "{{ jenkins_workspace }}"
