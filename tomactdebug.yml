@@ -1,0 +1,51 @@
+---
+- name: Manage Tomcat service
+  hosts: deploy
+  become: yes
+  tasks:
+    - name: Ensure Tomcat service file is present
+      ansible.builtin.copy:
+        dest: "/etc/systemd/system/tomcat.service"
+        content: |
+          [Unit]
+          Description=Apache Tomcat Web Application Container
+          After=network.target
+
+          [Service]
+          Type=forking
+          User=tomcat
+          Group=tomcat
+          Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
+          Environment="CATALINA_HOME=/opt/tomcat"
+          Environment="CATALINA_BASE=/opt/tomcat"
+          Environment="JAVA_OPTS=-Xms512M -Xmx1024M"
+          ExecStart=/opt/tomcat/bin/startup.sh
+          ExecStop=/opt/tomcat/bin/shutdown.sh
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+      mode: '0644'
+      notify:
+        - Reload systemd
+
+    - name: Ensure Tomcat service is started and enabled
+      ansible.builtin.systemd:
+        name: tomcat
+        state: started
+        enabled: yes
+
+    - name: Confirm Tomcat is running
+      ansible.builtin.systemd:
+        name: tomcat
+        state: started
+      register: tomcat_status
+
+    - name: Output Tomcat status
+      ansible.builtin.debug:
+        msg: "Tomcat is {{ 'running' if tomcat_status.state == 'started' else 'not running' }} on {{ inventory_hostname }}."
+
+  handlers:
+    - name: Reload systemd
+      ansible.builtin.systemd:
+        daemon_reload: yes

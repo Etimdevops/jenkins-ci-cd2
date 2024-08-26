@@ -1,76 +1,4 @@
 ---
-- name: Deploy Java Web Application
-  hosts: deploy
-  become: yes
-  vars:
-    tomcat_webapps_dir: "/opt/tomcat/webapps"
-    war_file_path_file: "/tmp/war_file_path.txt"
-    app_name: "WebAppCal"  # Adjust based on your application name
-
-  tasks:
-    - name: Read WAR file path from file
-      ansible.builtin.slurp:
-        src: "{{ war_file_path_file }}"
-      register: war_file_path_slurp
-
-    - name: Set WAR file path as variable
-      ansible.builtin.set_fact:
-        war_file: "{{ war_file_path_slurp.content | b64decode | trim }}"
-
-    - name: Ensure Tomcat webapps directory exists
-      ansible.builtin.file:
-        path: "{{ tomcat_webapps_dir }}"
-        state: directory
-
-    - name: Stop Tomcat service (Debian/Ubuntu-based)
-      ansible.builtin.systemd:
-        name: tomcat
-        state: stopped
-      when: ansible_os_family in ["Debian", "Ubuntu"]
-
-    - name: Stop Tomcat service (Red Hat-based)
-      ansible.builtin.systemd:
-        name: tomcat
-        state: stopped
-      when: ansible_os_family == "RedHat"
-
-    - name: Deploy the WAR file to Tomcat
-      ansible.builtin.copy:
-        src: "{{ war_file }}"
-        dest: "{{ tomcat_webapps_dir }}/{{ app_name }}.war"
-        mode: '0644'
-
-    - name: Start Tomcat service (Debian/Ubuntu-based)
-      ansible.builtin.systemd:
-        name: tomcat
-        state: started
-      when: ansible_os_family in ["Debian", "Ubuntu"]
-
-    - name: Start Tomcat service (Red Hat-based)
-      ansible.builtin.systemd:
-        name: tomcat
-        state: started
-      when: ansible_os_family == "RedHat"
-
-    - name: Verify that the application is deployed
-      ansible.builtin.uri:
-        url: "http://localhost:8080/{{ app_name }}"
-        status_code: 200
-        timeout: 30
-        retries: 5
-        delay: 10
-      register: deployment_check
-
-    - name: Show deployment result
-      ansible.builtin.debug:
-        msg: |
-          Deployment verification result:
-          Status code: {{ deployment_check.status }}
-          Response: {{ deployment_check.content }}
-
-=======================
-
----
 - name: Perform Maven build
   hosts: n1
   become: yes
@@ -78,6 +6,9 @@
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
     m2_home: "/opt/apache-maven-3.8.8"
+    app_name: "WebAppCal"  # Define your application name here
+    war_file_path: "{{ jenkins_workspace }}/target/{{ app_name }}-0.0.7.war"
+  
   tasks:
     - name: Ensure Jenkins workspace directory exists
       ansible.builtin.file:
@@ -102,16 +33,40 @@
           Error Output:
           {{ build_result.stderr }}
 
+    - name: Save WAR file path to a file
+      ansible.builtin.copy:
+        content: "{{ war_file_path }}"
+        dest: /tmp/war_file_path.txt
+      when: build_result.rc == 0  # Only save if the build was successful
 
-  ---
-- name: Perform Maven test
+
+
+---
+- name: Test Java Web Application
   hosts: n1
   become: yes
   vars:
     jenkins_workspace: "/home/ec2-user/workspace/JenkinsAnsible"
-    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
-    m2_home: "/opt/apache-maven-3.8.8"
+    war_file: "/home/ec2-user/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+    java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"  # Update with the correct path to your Java installation
+    m2_home: "/opt/apache-maven-3.8.8"       # Update with the correct path to your Maven installation
+
   tasks:
+    - name: Ensure test workspace directory exists
+      ansible.builtin.file:
+        path: "{{ jenkins_workspace }}"
+        state: directory
+
+    - name: Check if WAR file exists
+      ansible.builtin.stat:
+        path: "{{ war_file }}"
+      register: war_file_stat
+
+    - name: Fail if WAR file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file not found: {{ war_file }}"
+      when: not war_file_stat.stat.exists
+
     - name: Run Maven tests
       ansible.builtin.shell:
         cmd: mvn test
@@ -129,76 +84,6 @@
           {{ test_result.stdout }}
           Error Output:
           {{ test_result.stderr }}
-
-- name: Deploy Java Web Application
-  hosts: deploy
-  become: yes
-  vars:
-    tomcat_webapps_dir: "/opt/tomcat/webapps"
-    war_file_path_file: "/tmp/war_file_path.txt"
-    app_name: "WebAppCal"
-
-  tasks:
-    - name: Verify that the WAR file path exists
-      ansible.builtin.stat:
-        path: "{{ war_file_path_file }}"
-      register: war_file_stat
-
-    - name: Fail if WAR file path file does not exist
-      ansible.builtin.fail:
-        msg: "WAR file path file not found: {{ war_file_path_file }}"
-      when: not war_file_stat.stat.exists
-
-    - name: Read WAR file path from file
-      ansible.builtin.slurp:
-        src: "{{ war_file_path_file }}"
-      register: war_file_path_slurp
-      when: war_file_stat.stat.exists
-
-    - name: Set WAR file path as variable
-      ansible.builtin.set_fact:
-        war_file: "{{ war_file_path_slurp.content | b64decode | trim }}"
-      when: war_file_stat.stat.exists
-
-    # The rest of your deployment tasks
-
-
-
-pipeline {
-    agent { label 'ansible' }  // Use the 'ansible' agent
-    stages {
-        stage('Checkout') {
-            steps {
-                dir('/home/ec2-user/jenkins-ci-cd2') {
-                    git url: 'https://github.com/Etimdevops/jenkins-ci-cd2.git', branch: 'master'
-                }
-            }
-        }
-        stage('Build') {
-            steps {
-                dir('/home/ec2-user/jenkins-ci-cd2') {
-                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '01-build.yml'
-                }
-            }
-        }
-        stage('Test') {
-            steps {
-                dir('/home/ec2-user/jenkins-ci-cd2') {
-                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '02-test.yml'
-                }
-            }
-        }
-        stage('Deploy') {
-            steps {
-                dir('/home/ec2-user/jenkins-ci-cd2') {
-                    ansiblePlaybook credentialsId: 'JenkinsAns', disableHostKeyChecking: true, installation: 'Ansible', inventory: 'hosts.ini', playbook: '03-deploy.yml'
-                }
-            }
-        }
-    }
-}
-
-
 
 
 
@@ -252,4 +137,58 @@ pipeline {
         - n3
         - n4
         - n5
+
+
+
+
+---
+- name: Fetch and Transfer WAR file to deployment servers
+  hosts: n1
+  become: yes
+  vars:
+    war_file_path: "/home/ec2-user/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+    local_temp_war_file_path: "/tmp/WebAppCal-0.0.7.war"
+  
+  tasks:
+    - name: Ensure /tmp directory exists on build server
+      ansible.builtin.file:
+        path: "/tmp"
+        state: directory
+
+    - name: Fetch WAR file from build server to Ansible controller
+      ansible.builtin.fetch:
+        src: "{{ war_file_path }}"
+        dest: "{{ local_temp_war_file_path }}"
+        flat: yes
+
+    - name: Ensure /opt/tomcat/webapps directory exists on deployment servers
+      ansible.builtin.file:
+        path: "/opt/tomcat/webapps"
+        state: directory
+        owner: tomcat
+        group: tomcat
+        mode: '0755'
+      delegate_to: "{{ item }}"
+      with_items:
+        - n3
+        - n4
+        - n5
+
+    - name: Transfer WAR file to deployment servers
+      ansible.builtin.copy:
+        src: "{{ local_temp_war_file_path }}"
+        dest: "/opt/tomcat/webapps"
+        owner: tomcat
+        group: tomcat
+        mode: '0644'
+      delegate_to: "{{ item }}"
+      with_items:
+        - n3
+        - n4
+        - n5
+
+
+
+
+
 

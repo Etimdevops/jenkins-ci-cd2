@@ -33,6 +33,16 @@
           Error Output:
           {{ build_result.stderr }}
 
+    - name: Check if WAR file exists
+      ansible.builtin.stat:
+        path: "{{ war_file_path }}"
+      register: war_file_stat
+
+    - name: Fail if WAR file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file not found: {{ war_file_path }}"
+      when: not war_file_stat.stat.exists
+
     - name: Save WAR file path to a file
       ansible.builtin.copy:
         content: "{{ war_file_path }}"

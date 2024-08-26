@@ -1,69 +1,50 @@
 ---
 - name: Deploy Java Web Application
-  hosts: deploy
+  hosts: n3, n4, n5
   become: yes
+  vars:
+    tomcat_service_name: "tomcat"  # Adjust based on the actual service name
+    war_file_path: "/tmp/war_file_path.txt"
+
   tasks:
-    - name: Create tomcat group if it does not exist
-      group:
-        name: tomcat
-        state: present
-
-    - name: Create tomcat user if it does not exist
-      user:
-        name: tomcat
-        group: tomcat
-        system: yes
-        shell: /bin/nologin
-        state: present
-
-    - name: Ensure Tomcat webapps directory exists
-      file:
-        path: /opt/tomcat/webapps
+    - name: Ensure /tmp directory exists
+      ansible.builtin.file:
+        path: "/tmp"
         state: directory
-        owner: tomcat
-        group: tomcat
-        mode: '0755'
 
-    - name: Stop Tomcat service
-      block:
-        - name: Check Tomcat service status
-          command: systemctl is-active tomcat
-          register: tomcat_status
-          failed_when: false
-          changed_when: false
+    - name: Fetch WAR file path from deployment server
+      ansible.builtin.slurp:
+        src: "{{ war_file_path }}"
+      register: war_file_path_content
 
-        - name: Stop Tomcat service if running
-          systemd:
-            name: tomcat
-            state: stopped
-          when: tomcat_status.stdout == "active"
+    - name: Decode and save WAR file path
+      ansible.builtin.copy:
+        content: "{{ war_file_path_content.content | b64decode }}"
+        dest: "/tmp/war_file_path.txt"
 
-    - name: Deploy WAR file to Tomcat webapps directory
-      copy:
-        src: "/tmp/WebAppCal-0.0.7.war"
-        dest: /opt/tomcat/webapps/WebAppCal.war
-        owner: tomcat
-        group: tomcat
-        mode: '0644'
+    - name: Ensure Tomcat is stopped
+      ansible.builtin.systemd:
+        name: "{{ tomcat_service_name }}"
+        state: stopped
 
-    - name: Start Tomcat service
-      block:
-        - name: Ensure Tomcat service is enabled and started
-          systemd:
-            name: tomcat
-            enabled: yes
-            state: started
+    - name: Deploy WAR file to Tomcat
+      ansible.builtin.copy:
+        src: "{{ ansible_env.HOME }}/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+        dest: "/opt/tomcat/webapps/"  # Adjust the path based on your Tomcat installation
 
-        - name: Check Tomcat service status
-          command: systemctl status tomcat
-          register: tomcat_service_status
+    - name: Ensure Tomcat is started
+      ansible.builtin.systemd:
+        name: "{{ tomcat_service_name }}"
+        state: started
 
-    - name: Show Tomcat service status
-      debug:
-        msg: "{{ tomcat_service_status.stdout }}"
+    - name: Verify deployment
+      ansible.builtin.uri:
+        url: "http://localhost:8080/WebAppCal-0.0.7"
+        method: GET
+        status_code: 200
+      register: deploy_status
 
-    - name: Verify Tomcat service is running
-      command: systemctl is-active tomcat
-      register: tomcat_running
-      failed_when: tomcat_running.stdout != "active"
-      changed_when: false
+    - name: Fail if deployment verification fails
+      ansible.builtin.fail:
+        msg: "Deployment verification failed for WebAppCal."
+      when: deploy_status.status != 200
