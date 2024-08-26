@@ -1,65 +1,45 @@
----
-- name: Manage Tomcat service
+- name: Fix Tomcat permissions
   hosts: deploy
   become: yes
   tasks:
-    - name: Ensure Tomcat service file is present
-      ansible.builtin.copy:
-        dest: "/etc/systemd/system/tomcat.service"
-        content: |
-          [Unit]
-          Description=Apache Tomcat Web Application Container
-          After=network.target
+    - name: Ensure Tomcat user and group exist
+      ansible.builtin.group:
+        name: tomcat
+        state: present
 
-          [Service]
-          Type=forking
-          User=tomcat
-          Group=tomcat
-          Environment="CATALINA_PID=/opt/tomcat/temp/tomcat.pid"
-          Environment="CATALINA_HOME=/opt/tomcat"
-          Environment="CATALINA_BASE=/opt/tomcat"
-          Environment="JAVA_OPTS=-Xms512M -Xmx1024M"
-          ExecStart=/opt/tomcat/bin/startup.sh
-          ExecStop=/opt/tomcat/bin/shutdown.sh
-          Restart=on-failure
+    - name: Create Tomcat user
+      ansible.builtin.user:
+        name: tomcat
+        group: tomcat
+        shell: /sbin/nologin
+        create_home: no
 
-          [Install]
-          WantedBy=multi-user.target
-        mode: '0644'
-      notify:
-        - Reload systemd
+    - name: Set ownership for Tomcat directory
+      ansible.builtin.file:
+        path: /opt/tomcat
+        owner: tomcat
+        group: tomcat
+        recurse: yes
 
-    - name: Reload systemd to pick up new Tomcat service file
-      ansible.builtin.systemd:
-        daemon_reload: yes
+    - name: Set permissions for Tomcat files
+      ansible.builtin.file:
+        path: /opt/tomcat/bin/startup.sh
+        mode: 'u+x'
+        owner: tomcat
+        group: tomcat
 
-    - name: Ensure Tomcat service is started and enabled
+    - name: Ensure Tomcat logs and temp directories are writable
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: 'u+rwx'
+        owner: tomcat
+        group: tomcat
+      with_items:
+        - /opt/tomcat/logs
+        - /opt/tomcat/temp
+
+    - name: Restart Tomcat service
       ansible.builtin.systemd:
         name: tomcat
-        state: started
-        enabled: yes
-      register: tomcat_service
-      ignore_errors: yes
-
-    - name: Collect Tomcat service status
-      ansible.builtin.command:
-        cmd: systemctl status tomcat.service
-      register: tomcat_status_output
-      failed_when: false
-
-    - name: Collect journal logs if Tomcat failed to start
-      ansible.builtin.command:
-        cmd: journalctl -u tomcat.service --since "10 minutes ago"
-      register: tomcat_journal_logs
-      failed_when: false
-      when: tomcat_service.failed
-
-    - name: Output Tomcat status
-      ansible.builtin.debug:
-        msg: |
-          Tomcat service status on {{ inventory_hostname }}:
-          {{ tomcat_status_output.stdout }}
-          {% if tomcat_service.failed %}
-          Journal logs:
-          {{ tomcat_journal_logs.stdout }}
-          {% endif %}
+        state: restarted
