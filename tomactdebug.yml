@@ -25,7 +25,7 @@
 
           [Install]
           WantedBy=multi-user.target
-      mode: '0644'
+        mode: '0644'
       notify:
         - Reload systemd
 
