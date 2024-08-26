@@ -13,3 +13,85 @@ pipeline {
         }
     }
 }
+
+
+
+
+---
+- name: Install Apache Tomcat
+  hosts: deploy
+  become: yes
+  vars:
+    tomcat_version: "9.0.11"
+    tomcat_tarball: "apache-tomcat-{{ tomcat_version }}.tar.gz"
+    tomcat_download_url: "https://archive.apache.org/dist/tomcat/tomcat-9/v{{ tomcat_version }}/bin/{{ tomcat_tarball }}"
+
+  tasks:
+    - name: Ensure required packages are installed (Debian/Ubuntu-based)
+      apt:
+        name:
+          - wget
+          - tar
+        state: present
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Ensure required packages are installed (Red Hat-based)
+      yum:
+        name:
+          - wget
+          - tar
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Download Tomcat tarball
+      get_url:
+        url: "{{ tomcat_download_url }}"
+        dest: "/tmp/{{ tomcat_tarball }}"
+
+    - name: Extract Tomcat tarball
+      unarchive:
+        src: "/tmp/{{ tomcat_tarball }}"
+        dest: "/opt/"
+        remote_src: yes
+
+    - name: Create a symlink for Tomcat
+      file:
+        src: "/opt/apache-tomcat-{{ tomcat_version }}"
+        dest: "/opt/tomcat"
+        state: link
+
+    - name: Set up Tomcat environment variables (Debian/Ubuntu-based)
+      lineinfile:
+        path: "/etc/profile.d/tomcat.sh"
+        line: 'export CATALINA_HOME="/opt/tomcat"'
+        create: yes
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Set up Tomcat environment variables (Red Hat-based)
+      lineinfile:
+        path: "/etc/profile.d/tomcat.sh"
+        line: 'export CATALINA_HOME="/opt/tomcat"'
+        create: yes
+      when: ansible_os_family == "RedHat"
+
+    - name: Ensure environment variables are applied (Debian/Ubuntu-based)
+      shell: |
+        . /etc/profile.d/tomcat.sh
+        echo "CATALINA_HOME is set to $CATALINA_HOME"
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Ensure environment variables are applied (Red Hat-based)
+      shell: |
+        . /etc/profile.d/tomcat.sh
+        echo "CATALINA_HOME is set to $CATALINA_HOME"
+      when: ansible_os_family == "RedHat"
+
+    - name: Start Tomcat service (Debian/Ubuntu-based)
+      command: "/opt/tomcat/bin/startup.sh"
+      become: yes
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+
+    - name: Start Tomcat service (Red Hat-based)
+      command: "/opt/tomcat/bin/startup.sh"
+      become: yes
+      when: ansible_os_family == "RedHat"

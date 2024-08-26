@@ -76,3 +76,24 @@
       command: "/opt/tomcat/bin/startup.sh"
       become: yes
       when: ansible_os_family == "RedHat"
+
+    - name: Wait for Tomcat to start (Debian/Ubuntu-based)
+      uri:
+        url: "http://localhost:8080"
+        status_code: 200
+        timeout: 30
+      when: ansible_os_family in ["Debian", "Ubuntu"]
+      register: tomcat_status
+
+    - name: Wait for Tomcat to start (Red Hat-based)
+      uri:
+        url: "http://localhost:8080"
+        status_code: 200
+        timeout: 30
+      when: ansible_os_family == "RedHat"
+      register: tomcat_status
+
+    - name: Fail if Tomcat did not start
+      fail:
+        msg: "Tomcat did not start successfully on {{ inventory_hostname }}."
+      when: tomcat_status is defined and tomcat_status.status != 200
