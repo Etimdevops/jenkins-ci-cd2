@@ -29,23 +29,37 @@
       notify:
         - Reload systemd
 
+    - name: Reload systemd to pick up new Tomcat service file
+      ansible.builtin.systemd:
+        daemon_reload: yes
+
     - name: Ensure Tomcat service is started and enabled
       ansible.builtin.systemd:
         name: tomcat
         state: started
         enabled: yes
+      register: tomcat_service
+      ignore_errors: yes
 
-    - name: Confirm Tomcat is running
-      ansible.builtin.systemd:
-        name: tomcat
-        state: started
-      register: tomcat_status
+    - name: Collect Tomcat service status
+      ansible.builtin.command:
+        cmd: systemctl status tomcat.service
+      register: tomcat_status_output
+      failed_when: false
+
+    - name: Collect journal logs if Tomcat failed to start
+      ansible.builtin.command:
+        cmd: journalctl -u tomcat.service --since "10 minutes ago"
+      register: tomcat_journal_logs
+      failed_when: false
+      when: tomcat_service.failed
 
     - name: Output Tomcat status
       ansible.builtin.debug:
-        msg: "Tomcat is {{ 'running' if tomcat_status.state == 'started' else 'not running' }} on {{ inventory_hostname }}."
-
-  handlers:
-    - name: Reload systemd
-      ansible.builtin.systemd:
-        daemon_reload: yes
+        msg: |
+          Tomcat service status on {{ inventory_hostname }}:
+          {{ tomcat_status_output.stdout }}
+          {% if tomcat_service.failed %}
+          Journal logs:
+          {{ tomcat_journal_logs.stdout }}
+          {% endif %}
