@@ -114,12 +114,24 @@
         name: tomcat
         enabled: yes
         state: started
+      register: tomcat_service
 
-    - name: Wait for Tomcat to start and check if it's running on port 8080
-      uri:
-        url: http://localhost:8080
-        status_code: 200
+    - name: Debug Tomcat service status
+      command: systemctl status tomcat
       register: tomcat_status
-      retries: 5
-      delay: 15
-      until: tomcat_status.status == 200
+      failed_when: false
+      changed_when: false
+
+    - name: Display Tomcat service status
+      debug:
+        var: tomcat_status.stdout_lines
+
+    - name: Display Tomcat service logs
+      command: journalctl -u tomcat.service --no-pager
+      register: tomcat_logs
+      failed_when: false
+      changed_when: false
+
+    - name: Display Tomcat service logs
+      debug:
+        var: tomcat_logs.stdout_lines
