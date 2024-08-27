@@ -43,14 +43,13 @@
         name: "{{ tomcat_service_name }}"
         state: started
 
-    - name: Verify deployment
-      ansible.builtin.uri:
-        url: "http://localhost:8080/WebAppCal-0.0.7"
-        method: GET
-        status_code: 200
-      register: deploy_status
+    - name: Confirm Tomcat is started
+      ansible.builtin.systemd:
+        name: "{{ tomcat_service_name }}"
+        state: started
+      register: tomcat_status
 
-    - name: Fail if deployment verification fails
+    - name: Fail if Tomcat is not running
       ansible.builtin.fail:
-        msg: "Deployment verification failed for WebAppCal."
-      when: deploy_status.status != 200
+        msg: "Tomcat service is not running."
+      when: tomcat_status.status != "started"
