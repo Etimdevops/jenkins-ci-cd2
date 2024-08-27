@@ -1,6 +1,6 @@
 ---
 - name: Install and Configure Tomcat 8.5.83
-  hosts: deploy
+  hosts: all
   become: yes
 
   tasks:
@@ -8,13 +8,13 @@
       package:
         name: java-11-openjdk-devel
         state: present
-      when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Amazon"
+      when: ansible_distribution in ['RedHat', 'CentOS', 'Amazon']
 
     - name: Ensure OpenJDK is installed on Debian-based systems
       package:
         name: openjdk-11-jdk
         state: present
-      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
+      when: ansible_distribution in ['Ubuntu', 'Debian']
 
     - name: Validate if Java is installed
       shell: java -version
@@ -45,6 +45,17 @@
         dest: /opt/tomcat8
         remote_src: yes
         creates: /opt/tomcat8/apache-tomcat-8.5.83
+      ignore_errors: yes
+
+    - name: Check if Tomcat archive was downloaded successfully
+      stat:
+        path: /opt/tomcat8/apache-tomcat-8.5.83.tar.gz
+      register: tomcat_archive
+
+    - name: Fail if Tomcat archive is missing or empty
+      fail:
+        msg: "Tomcat download failed or the file is empty"
+      when: not tomcat_archive.stat.exists or tomcat_archive.stat.size == 0
 
     - name: Set CATALINA_BASE environment variable
       lineinfile:
