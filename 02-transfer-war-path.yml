@@ -34,9 +34,9 @@
         state: directory
       delegate_to: "{{ item }}"
       with_items:
-        - n3
+        #- n3
         - n4
-        - n5
+        #- n5
 
     - name: Transfer WAR file path to deployment servers
       ansible.builtin.copy:
@@ -44,6 +44,6 @@
         dest: "/tmp/war_file_path.txt"
       delegate_to: "{{ item }}"
       with_items:
-        - n3
+        #- n3
         - n4
-        - n5
+        #- n5
