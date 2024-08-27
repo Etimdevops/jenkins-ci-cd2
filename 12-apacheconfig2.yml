@@ -1,0 +1,85 @@
+---
+- name: Install and Configure Tomcat 8.5.83
+  hosts: deploy
+  become: yes
+
+  tasks:
+    - name: Ensure OpenJDK is installed
+      package:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Validate if Java is installed
+      shell: java -version
+      register: java_version
+      ignore_errors: yes
+
+    - name: Fail if Java is not installed
+      fail:
+        msg: "Java is not installed"
+      when: java_version.rc != 0
+
+    - name: Create tomcat group
+      group:
+        name: tomcat
+        state: present
+
+    - name: Create Tomcat directory
+      file:
+        path: /opt/tomcat8
+        state: directory
+        owner: root
+        group: tomcat
+        mode: '0755'
+
+    - name: Download and extract Tomcat
+      unarchive:
+        src: https://dlcdm.apache.org/tomcat/tomcat-8/v8.5.83/bin/apache-tomcat-8.5.83.tar.gz
+        dest: /opt/tomcat8
+        remote_src: yes
+        creates: /opt/tomcat8/apache-tomcat-8.5.83
+
+    - name: Set CATALINA_BASE environment variable
+      lineinfile:
+        path: /etc/environment
+        line: 'CATALINA_BASE=/opt/tomcat8/apache-tomcat-8.5.83'
+        create: yes
+
+    - name: Create Tomcat service file
+      copy:
+        dest: /etc/systemd/system/tomcat.service
+        content: |
+          [Unit]
+          Description=Apache Tomcat 8
+          After=network.target
+
+          [Service]
+          User=root
+          Group=tomcat
+          Environment=CATALINA_BASE=/opt/tomcat8/apache-tomcat-8.5.83
+          ExecStart=/opt/tomcat8/apache-tomcat-8.5.83/bin/catalina.sh start
+          ExecStop=/opt/tomcat8/apache-tomcat-8.5.83/bin/catalina.sh stop
+          Restart=on-failure
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Reload systemd to apply Tomcat service
+      systemd:
+        daemon_reload: yes
+
+    - name: Enable and start Tomcat service
+      systemd:
+        name: tomcat
+        enabled: yes
+        state: started
+
+    - name: Check Tomcat service on port 8080
+      uri:
+        url: http://localhost:8080
+        return_content: no
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 5
+      delay: 10
