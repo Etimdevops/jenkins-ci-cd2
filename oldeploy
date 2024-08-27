@@ -189,6 +189,111 @@
 
 
 
+================================================================
+
+---
+- name: Transfer WAR file path to deployment servers
+  hosts: n1
+  become: yes
+  vars:
+    war_file_path_file: "/tmp/war_file_path.txt"
+    transfer_file_path: "/tmp/war_file_path.txt"
+  
+  tasks:
+    - name: Ensure /tmp directory exists on build server
+      ansible.builtin.file:
+        path: "/tmp"
+        state: directory
+
+    - name: Check if WAR file path file exists on build server
+      ansible.builtin.stat:
+        path: "{{ war_file_path_file }}"
+      register: war_file_path_stat
+
+    - name: Fail if WAR file path file does not exist
+      ansible.builtin.fail:
+        msg: "WAR file path file not found: {{ war_file_path_file }}"
+      when: not war_file_path_stat.stat.exists
+
+    - name: Fetch WAR file path from build server
+      ansible.builtin.fetch:
+        src: "{{ war_file_path_file }}"
+        dest: "{{ transfer_file_path }}"
+        flat: yes
+
+    - name: Ensure /tmp directory exists on deployment servers
+      ansible.builtin.file:
+        path: "/tmp"
+        state: directory
+      delegate_to: "{{ item }}"
+      with_items:
+        #- n3
+        - n4
+        #- n5
+
+    - name: Transfer WAR file path to deployment servers
+      ansible.builtin.copy:
+        src: "{{ transfer_file_path }}"
+        dest: "/tmp/war_file_path.txt"
+      delegate_to: "{{ item }}"
+      with_items:
+        #- n3
+        - n4
+        #- n5
+======================================================================
+
+---
+- name: Deploy Java Web Application
+  hosts: n4
+  become: yes
+  vars:
+    tomcat_service_name: "tomcat"  # Adjust based on the actual service name
+    war_file_path: "/tmp/war_file_path.txt"
+
+  tasks:
+    - name: Ensure /tmp directory exists
+      ansible.builtin.file:
+        path: "/tmp"
+        state: directory
+
+    - name: Fetch WAR file path from deployment server
+      ansible.builtin.slurp:
+        src: "{{ war_file_path }}"
+      register: war_file_path_content
+
+    - name: Decode and save WAR file path
+      ansible.builtin.copy:
+        content: "{{ war_file_path_content.content | b64decode }}"
+        dest: "/tmp/war_file_path.txt"
+
+    - name: Ensure Tomcat is stopped
+      ansible.builtin.systemd:
+        name: "{{ tomcat_service_name }}"
+        state: stopped
+
+    - name: Deploy WAR file to Tomcat
+      ansible.builtin.copy:
+        src: "{{ ansible_env.HOME }}/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+        dest: "/opt/tomcat/webapps/"  # Adjust the path based on your Tomcat installation
+
+    - name: Ensure Tomcat is started
+      ansible.builtin.systemd:
+        name: "{{ tomcat_service_name }}"
+        state: started
+
+    - name: Verify deployment
+      ansible.builtin.uri:
+        url: "http://localhost:8080/WebAppCal-0.0.7"
+        method: GET
+        status_code: 200
+      register: deploy_status
+
+    - name: Fail if deployment verification fails
+      ansible.builtin.fail:
+        msg: "Deployment verification failed for WebAppCal."
+      when: deploy_status.status != 200
+
+
 
 
 

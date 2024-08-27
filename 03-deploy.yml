@@ -4,7 +4,7 @@
   become: yes
   vars:
     tomcat_service_name: "tomcat"  # Adjust based on the actual service name
-    war_file_path: "/tmp/war_file_path.txt"
+    war_file_path_file: "/tmp/war_file_path.txt"
 
   tasks:
     - name: Ensure /tmp directory exists
@@ -14,13 +14,19 @@
 
     - name: Fetch WAR file path from deployment server
       ansible.builtin.slurp:
-        src: "{{ war_file_path }}"
+        src: "{{ war_file_path_file }}"
       register: war_file_path_content
 
-    - name: Decode and save WAR file path
-      ansible.builtin.copy:
-        content: "{{ war_file_path_content.content | b64decode }}"
-        dest: "/tmp/war_file_path.txt"
+    - name: Decode WAR file path
+      ansible.builtin.set_fact:
+        war_file_path: "{{ war_file_path_content.content | b64decode }}"
+
+    - name: Fetch WAR file from build server
+      ansible.builtin.fetch:
+        src: "{{ war_file_path }}"
+        dest: "/tmp/WebAppCal-0.0.7.war"
+        flat: yes
+      delegate_to: n1
 
     - name: Ensure Tomcat is stopped
       ansible.builtin.systemd:
@@ -29,7 +35,7 @@
 
     - name: Deploy WAR file to Tomcat
       ansible.builtin.copy:
-        src: "{{ ansible_env.HOME }}/workspace/JenkinsAnsible/target/WebAppCal-0.0.7.war"
+        src: "/tmp/WebAppCal-0.0.7.war"
         dest: "/opt/tomcat/webapps/"  # Adjust the path based on your Tomcat installation
 
     - name: Ensure Tomcat is started
