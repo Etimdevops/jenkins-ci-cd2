@@ -4,10 +4,17 @@
   become: yes
 
   tasks:
-    - name: Ensure OpenJDK is installed
+    - name: Ensure OpenJDK is installed on Red Hat-based systems
+      package:
+        name: java-11-openjdk-devel
+        state: present
+      when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS" or ansible_distribution == "Amazon"
+
+    - name: Ensure OpenJDK is installed on Debian-based systems
       package:
         name: openjdk-11-jdk
         state: present
+      when: ansible_distribution == "Ubuntu" or ansible_distribution == "Debian"
 
     - name: Validate if Java is installed
       shell: java -version
@@ -34,7 +41,7 @@
 
     - name: Download and extract Tomcat
       unarchive:
-        src: https://dlcdm.apache.org/tomcat/tomcat-8/v8.5.83/bin/apache-tomcat-8.5.83.tar.gz
+        src: https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.83/bin/apache-tomcat-8.5.83.tar.gz
         dest: /opt/tomcat8
         remote_src: yes
         creates: /opt/tomcat8/apache-tomcat-8.5.83
