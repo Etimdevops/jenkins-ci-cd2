@@ -1,6 +1,6 @@
 ---
 - name: Deploy Java Web Application
-  hosts: n3, n4, n5
+  hosts: n4
   become: yes
   vars:
     tomcat_service_name: "tomcat"  # Adjust based on the actual service name
