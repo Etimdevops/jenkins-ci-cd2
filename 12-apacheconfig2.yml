@@ -1,6 +1,6 @@
 ---
 - name: Install and Configure Tomcat 8.5.83
-  hosts: deploy
+  hosts: n4
   become: yes
 
   tasks:
@@ -114,24 +114,12 @@
         name: tomcat
         enabled: yes
         state: started
-      register: tomcat_service
 
-    - name: Debug Tomcat service status
-      command: systemctl status tomcat
+    - name: Wait for Tomcat to start and check if it's running on port 8080
+      uri:
+        url: http://localhost:8080
+        status_code: 200
       register: tomcat_status
-      failed_when: false
-      changed_when: false
-
-    - name: Display Tomcat service status
-      debug:
-        var: tomcat_status.stdout_lines
-
-    - name: Display Tomcat service logs
-      command: journalctl -u tomcat.service --no-pager
-      register: tomcat_logs
-      failed_when: false
-      changed_when: false
-
-    - name: Display Tomcat service logs
-      debug:
-        var: tomcat_logs.stdout_lines
+      retries: 5
+      delay: 15
+      until: tomcat_status.status == 200
