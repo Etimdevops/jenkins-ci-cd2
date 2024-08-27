@@ -1,6 +1,6 @@
 ---
 - name: Install and Configure Tomcat 8.5.83
-  hosts: all
+  hosts: deploy
   become: yes
 
   tasks:
