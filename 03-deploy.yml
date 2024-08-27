@@ -43,13 +43,21 @@
         name: "{{ tomcat_service_name }}"
         state: started
 
-    - name: Confirm Tomcat is started
-      ansible.builtin.systemd:
-        name: "{{ tomcat_service_name }}"
+    - name: Wait for Tomcat to be up and running
+      ansible.builtin.wait_for:
+        port: 8080
         state: started
+        delay: 10
+        timeout: 300
+
+    - name: Confirm Tomcat is started
+      ansible.builtin.command:
+        cmd: "systemctl is-active {{ tomcat_service_name }}"
       register: tomcat_status
+      changed_when: false
+      failed_when: tomcat_status.stdout != "active"
 
     - name: Fail if Tomcat is not running
       ansible.builtin.fail:
         msg: "Tomcat service is not running."
-      when: tomcat_status.status != "started"
+      when: tomcat_status.stdout != "active"
