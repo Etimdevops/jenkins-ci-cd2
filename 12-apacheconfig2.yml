@@ -1,30 +1,32 @@
 ---
 - name: Install and Configure Tomcat 8.5.83
-  hosts: deploy
+  hosts: all
   become: yes
 
   tasks:
+
     - name: Ensure OpenJDK is installed on Red Hat-based systems
-      package:
-        name: java-11-openjdk-devel
+      yum:
+        name: java-1.8.0-openjdk
         state: present
-      when: ansible_distribution in ['RedHat', 'CentOS', 'Amazon']
+      when: ansible_distribution == "RedHat" or ansible_distribution == "CentOS"
 
     - name: Ensure OpenJDK is installed on Debian-based systems
-      package:
+      apt:
         name: openjdk-11-jdk
         state: present
-      when: ansible_distribution in ['Ubuntu', 'Debian']
+      when: ansible_distribution == "Debian" or ansible_distribution == "Ubuntu"
+      ignore_errors: yes
 
     - name: Validate if Java is installed
       shell: java -version
-      register: java_version
+      register: java_installed
       ignore_errors: yes
 
     - name: Fail if Java is not installed
       fail:
         msg: "Java is not installed"
-      when: java_version.rc != 0
+      when: java_installed.failed
 
     - name: Create tomcat group
       group:
@@ -35,13 +37,13 @@
       file:
         path: /opt/tomcat8
         state: directory
-        owner: root
+        owner: tomcat
         group: tomcat
         mode: '0755'
 
     - name: Download and extract Tomcat
       unarchive:
-        src: https://dlcdn.apache.org/tomcat/tomcat-8/v8.5.83/bin/apache-tomcat-8.5.83.tar.gz
+        src: https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.83/bin/apache-tomcat-8.5.83.tar.gz
         dest: /opt/tomcat8
         remote_src: yes
         creates: /opt/tomcat8/apache-tomcat-8.5.83
@@ -50,54 +52,61 @@
     - name: Check if Tomcat archive was downloaded successfully
       stat:
         path: /opt/tomcat8/apache-tomcat-8.5.83.tar.gz
-      register: tomcat_archive
+      register: tomcat_downloaded
 
     - name: Fail if Tomcat archive is missing or empty
       fail:
         msg: "Tomcat download failed or the file is empty"
-      when: not tomcat_archive.stat.exists or tomcat_archive.stat.size == 0
+      when: tomcat_downloaded.stat.size == 0
 
-    - name: Set CATALINA_BASE environment variable
-      lineinfile:
-        path: /etc/environment
-        line: 'CATALINA_BASE=/opt/tomcat8/apache-tomcat-8.5.83'
-        create: yes
-
-    - name: Create Tomcat service file
+    - name: Create a service file for Tomcat
       copy:
-        dest: /etc/systemd/system/tomcat.service
         content: |
           [Unit]
-          Description=Apache Tomcat 8
+          Description=Apache Tomcat
           After=network.target
 
           [Service]
-          User=root
-          Group=tomcat
+          Type=forking
+
+          Environment=JAVA_HOME=/usr/lib/jvm/jre
+          Environment=CATALINA_PID=/opt/tomcat8/apache-tomcat-8.5.83/temp/tomcat.pid
+          Environment=CATALINA_HOME=/opt/tomcat8/apache-tomcat-8.5.83
           Environment=CATALINA_BASE=/opt/tomcat8/apache-tomcat-8.5.83
-          ExecStart=/opt/tomcat8/apache-tomcat-8.5.83/bin/catalina.sh start
-          ExecStop=/opt/tomcat8/apache-tomcat-8.5.83/bin/catalina.sh stop
-          Restart=on-failure
+          Environment='CATALINA_OPTS=-Xms512M -Xmx1024M -server -XX:+UseParallelGC'
+          Environment='JAVA_OPTS=-Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom'
+
+          ExecStart=/opt/tomcat8/apache-tomcat-8.5.83/bin/startup.sh
+          ExecStop=/opt/tomcat8/apache-tomcat-8.5.83/bin/shutdown.sh
+
+          User=tomcat
+          Group=tomcat
+          UMask=0007
+          RestartSec=10
+          Restart=always
 
           [Install]
           WantedBy=multi-user.target
+        dest: /etc/systemd/system/tomcat.service
+        owner: root
+        group: root
+        mode: '0644'
 
-    - name: Reload systemd to apply Tomcat service
+    - name: Reload systemd to apply the new service file
       systemd:
         daemon_reload: yes
 
-    - name: Enable and start Tomcat service
+    - name: Enable and start the Tomcat service
       systemd:
         name: tomcat
         enabled: yes
         state: started
 
-    - name: Check Tomcat service on port 8080
+    - name: Wait for Tomcat to start and check if it's running on port 8080
       uri:
         url: http://localhost:8080
-        return_content: no
         status_code: 200
-      register: result
-      until: result.status == 200
+      register: tomcat_status
       retries: 5
-      delay: 10
+      delay: 15
+      until: tomcat_status.status == 200
