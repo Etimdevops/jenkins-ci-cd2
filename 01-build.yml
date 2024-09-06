@@ -3,7 +3,7 @@
   hosts: n1
   become: yes
   vars:
-    jenkins_workspace: "/home/ec2-user/jenkins-ci-cd2/src/main/java/mypackage/Calculator.java"
+    jenkins_workspace: "/home/ec2-user/jenkins-ci-cd2/src/main/java/mypackage"
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"
     m2_home: "/opt/apache-maven-3.8.8"
     app_name: "WebAppCal"  # Define your application name here
