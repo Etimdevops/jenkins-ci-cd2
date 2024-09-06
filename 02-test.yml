@@ -3,7 +3,7 @@
   hosts: n1
   become: yes
   vars:
-    jenkins_workspace: "/home/ec2-user/jenkins-ci-cd2"
+    jenkins_workspace: "/home/ec2-user/jenkins-ci-cd2/target"
     war_file: "{{ jenkins_workspace }}/target/WebAppCal-0.0.7.war"
     java_home: "/usr/lib/jvm/java-1.8.0-amazon-corretto.x86_64/jre"  # Update with the correct path to your Java installation
     m2_home: "/opt/apache-maven-3.8.8"       # Update with the correct path to your Maven installation
